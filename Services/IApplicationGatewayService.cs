@@ -17,4 +17,9 @@ public interface IApplicationGatewayService
         string subscriptionId,
         string resourceGroupName,
         CancellationToken cancellationToken = default);
+
+    Task<ApplicationGatewayResource> UpdateAsync(
+        string resourceId,
+        ApplicationGatewayData data,
+        CancellationToken cancellationToken = default);
 }

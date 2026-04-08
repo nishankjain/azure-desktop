@@ -33,6 +33,7 @@ public partial class App : Application
         services.AddTransient<ResourceGroupDetailViewModel>();
         services.AddTransient<ResourcesViewModel>();
         services.AddTransient<ResourceDetailViewModel>();
+        services.AddSingleton<AppGwViewModel>();
         services.AddTransient<TagManagerViewModel>();
         services.AddTransient<LockManagerViewModel>();
         services.AddTransient<FeaturesViewModel>();

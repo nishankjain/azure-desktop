@@ -54,16 +54,41 @@ public sealed partial class MainWindow : Window
             : Visibility.Collapsed;
     }
 
+    private string? _lastAppGwNavTag;
+
     private void ContentFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
     {
         BackButton.Visibility = ContentFrame.CanGoBack
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+        _lastAppGwNavTag = null;
+
         if (e.Parameter is SubscriptionItem sub)
         {
             _activeSubscription = sub;
             _activeNavContext = null;
+        }
+        else if (e.Parameter is (NavigationContext appGwCtx, AppGwSection section))
+        {
+            _activeSubscription = appGwCtx.Subscription;
+            _activeNavContext = appGwCtx;
+            _lastAppGwNavTag = section switch
+            {
+                AppGwSection.BackendPools => "AppGwBackendPools",
+                AppGwSection.BackendSettings => "AppGwBackendSettings",
+                AppGwSection.FrontendIP => "AppGwFrontendIP",
+                AppGwSection.PrivateLink => "AppGwPrivateLink",
+                AppGwSection.SslSettings => "AppGwSsl",
+                AppGwSection.Listeners => "AppGwListeners",
+                AppGwSection.RoutingRules => "AppGwRoutingRules",
+                AppGwSection.RewriteSets => "AppGwRewriteSets",
+                AppGwSection.HealthProbes => "AppGwHealthProbes",
+                AppGwSection.Configuration => "AppGwConfig",
+                AppGwSection.Waf => "AppGwWaf",
+                AppGwSection.JwtValidation => "AppGwJwt",
+                _ => "AppGwOverview",
+            };
         }
         else if (e.Parameter is NavigationContext ctx)
         {
@@ -107,8 +132,30 @@ public sealed partial class MainWindow : Window
         // Show only actions for the current scope
         // Tags/Locks pages inherit their parent's scope
         var isTagsOrLocks = pageType == typeof(TagsPage) || pageType == typeof(LocksPage);
+        var isAppGwSection = pageType == typeof(AppGwSectionPage);
+        var isAppGw = _activeNavContext?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true;
 
-        if (_activeNavContext?.Resource is not null && (pageType == typeof(ResourceDetailPage) || isTagsOrLocks))
+        if (_activeNavContext?.Resource is not null && isAppGw && (pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
+        {
+            // AppGW-specific nav
+            AddNavItems(
+                CreateNavItem("Overview", "AppGwOverview", "\xE946"),
+                CreateNavItem("Backend Pools", "AppGwBackendPools", "\xE774"),
+                CreateNavItem("Backend Settings", "AppGwBackendSettings", "\xE713"),
+                CreateNavItem("Frontend IP", "AppGwFrontendIP", "\xE968"),
+                CreateNavItem("Private Link", "AppGwPrivateLink", "\xE71B"),
+                CreateNavItem("SSL Settings", "AppGwSsl", "\xE72E"),
+                CreateNavItem("Listeners", "AppGwListeners", "\xE8B5"),
+                CreateNavItem("Routing Rules", "AppGwRoutingRules", "\xE8AD"),
+                CreateNavItem("Rewrite Sets", "AppGwRewriteSets", "\xE70F"),
+                CreateNavItem("Health Probes", "AppGwHealthProbes", "\xE95E"),
+                CreateNavItem("Configuration", "AppGwConfig", "\xE713"),
+                CreateNavItem("WAF", "AppGwWaf", "\xE83D"),
+                CreateNavItem("JWT Validation", "AppGwJwt", "\xE8D7"),
+                CreateNavItem("Manage Tags", "ResourceTags", "\xE1CB"),
+                CreateNavItem("Manage Locks", "ResourceLocks", "\xE72E"));
+        }
+        else if (_activeNavContext?.Resource is not null && (pageType == typeof(ResourceDetailPage) || isTagsOrLocks))
         {
             AddNavItems(
                 CreateNavItem("Overview", "ResourceDetail", "\xE946"),
@@ -116,7 +163,7 @@ public sealed partial class MainWindow : Window
                 CreateNavItem("Manage Locks", "ResourceLocks", "\xE72E"));
         }
         else if (_activeNavContext?.ResourceGroupName is not null &&
-                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isTagsOrLocks))
+                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
         {
             AddNavItems(
                 CreateNavItem("Overview", "RGDetail", "\xE946"),
@@ -141,9 +188,10 @@ public sealed partial class MainWindow : Window
             var t when t == typeof(FeaturesPage) || t == typeof(FeatureDetailPage) => "PreviewFeatures",
             var t when t == typeof(ResourceGroupDetailPage) => "RGDetail",
             var t when t == typeof(ResourcesPage) => "RGResources",
-            var t when t == typeof(ResourceDetailPage) => "ResourceDetail",
+            var t when t == typeof(ResourceDetailPage) => isAppGw ? "AppGwOverview" : "ResourceDetail",
             var t when t == typeof(TagsPage) => "ManageTags",
             var t when t == typeof(LocksPage) => "ManageLocks",
+            var t when t == typeof(AppGwSectionPage) => _lastAppGwNavTag,
             _ => null,
         };
 
@@ -208,6 +256,7 @@ public sealed partial class MainWindow : Window
             switch (tag)
             {
                 case "ResourceDetail":
+                case "AppGwOverview":
                     ContentFrame.Navigate(typeof(ResourceDetailPage), _activeNavContext);
                     return;
                 case "ResourceTags":
@@ -216,6 +265,29 @@ public sealed partial class MainWindow : Window
                 case "ResourceLocks":
                     NavigateToLocks(_activeNavContext.Resource.ResourceId, BuildBreadcrumbs("resource"));
                     return;
+            }
+
+            // AppGW section nav
+            if (tag?.StartsWith("AppGw") == true)
+            {
+                var section = tag switch
+                {
+                    "AppGwBackendPools" => AppGwSection.BackendPools,
+                    "AppGwBackendSettings" => AppGwSection.BackendSettings,
+                    "AppGwFrontendIP" => AppGwSection.FrontendIP,
+                    "AppGwPrivateLink" => AppGwSection.PrivateLink,
+                    "AppGwSsl" => AppGwSection.SslSettings,
+                    "AppGwListeners" => AppGwSection.Listeners,
+                    "AppGwRoutingRules" => AppGwSection.RoutingRules,
+                    "AppGwRewriteSets" => AppGwSection.RewriteSets,
+                    "AppGwHealthProbes" => AppGwSection.HealthProbes,
+                    "AppGwConfig" => AppGwSection.Configuration,
+                    "AppGwWaf" => AppGwSection.Waf,
+                    "AppGwJwt" => AppGwSection.JwtValidation,
+                    _ => AppGwSection.Overview,
+                };
+                ContentFrame.Navigate(typeof(AppGwSectionPage), (_activeNavContext, section));
+                return;
             }
         }
 

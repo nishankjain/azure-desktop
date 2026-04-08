@@ -77,42 +77,6 @@
                         </Grid>
                     </StackPanel>
                 </Border>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Frontend IP Configurations" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.FrontendIPs, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Backend Address Pools" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.BackendPools, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="HTTP Settings" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.HttpSettings, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="HTTP Listeners" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.HttpListeners, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Routing Rules" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.RoutingRules, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-
-                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Health Probes" />
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.HealthProbes, Mode=OneWay}">
-                    <ItemsRepeater.ItemTemplate><DataTemplate x:DataType="x:String"><Border Margin="0,2" Padding="12,8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6"><TextBlock Text="{x:Bind}" /></Border></DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

@@ -45,4 +45,22 @@ public sealed class ApplicationGatewayService(IAzureAuthService authService) : I
             yield return gateway;
         }
     }
+
+    public async Task<ApplicationGatewayResource> UpdateAsync(
+        string resourceId,
+        ApplicationGatewayData data,
+        CancellationToken cancellationToken = default)
+    {
+        var client = new ArmClient(authService.Credential);
+        var id = new Azure.Core.ResourceIdentifier(resourceId);
+        var rgId = ResourceGroupResource.CreateResourceIdentifier(id.SubscriptionId!, id.ResourceGroupName!);
+        var rg = client.GetResourceGroupResource(rgId);
+        var collection = rg.GetApplicationGateways();
+        var operation = await collection.CreateOrUpdateAsync(
+            Azure.WaitUntil.Completed,
+            data.Name,
+            data,
+            cancellationToken);
+        return operation.Value;
+    }
 }

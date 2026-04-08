@@ -53,7 +53,6 @@ public partial class ResourceDetailViewModel(IAzureAuthService authService) : Ob
 
     public async Task LoadAsync(ResourceItem resource, CancellationToken cancellationToken = default)
     {
-        IsLoading = true;
         Name = resource.Name;
         Type = resource.Type;
         Location = resource.Location;
@@ -62,11 +61,28 @@ public partial class ResourceDetailViewModel(IAzureAuthService authService) : Ob
 
         if (IsAppGateway)
         {
-            await LoadAppGatewayDetailsAsync(cancellationToken);
-        }
-        else
-        {
-            IsLoading = false;
+            // Load AppGW data into the shared AppGwViewModel
+            IsLoading = true;
+            try
+            {
+                var appGwVm = App.GetService<AppGwViewModel>();
+                await appGwVm.LoadAsync(resource.ResourceId, cancellationToken);
+
+                // Copy basic fields from AppGW VM
+                SkuName = appGwVm.SkuName;
+                SkuTier = appGwVm.SkuTier;
+                SkuCapacity = appGwVm.SkuCapacity;
+                OperationalState = appGwVm.OperationalState;
+                ProvisioningState = appGwVm.ProvisioningState;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Failed to load: {ex.Message}";
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 

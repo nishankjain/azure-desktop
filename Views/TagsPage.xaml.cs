@@ -11,6 +11,8 @@ public sealed partial class TagsPage : Page
     public TagManagerViewModel ViewModel { get; }
     public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private object? _parentNavParam;
+
     public TagsPage()
     {
         ViewModel = App.GetService<TagManagerViewModel>();
@@ -21,8 +23,9 @@ public sealed partial class TagsPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (string resourceId, List<string> breadcrumbs, object _))
+        if (e.Parameter is (string resourceId, List<string> breadcrumbs, object navParam))
         {
+            _parentNavParam = navParam;
             BreadcrumbItems.Clear();
             foreach (var b in breadcrumbs)
             {
@@ -38,7 +41,28 @@ public sealed partial class TagsPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (Frame.CanGoBack) Frame.GoBack();
+        NavigateToParent();
+    }
+
+    private void NavigateToParent()
+    {
+        if (_parentNavParam is NavigationContext ctx)
+        {
+            if (ctx.Resource is not null)
+                Frame.Navigate(typeof(ResourceDetailPage), ctx);
+            else if (ctx.ResourceGroupName is not null)
+                Frame.Navigate(typeof(ResourceGroupDetailPage), ctx);
+            else
+                Frame.Navigate(typeof(SubscriptionDetailPage), ctx.Subscription);
+        }
+        else if (_parentNavParam is SubscriptionItem sub)
+        {
+            Frame.Navigate(typeof(SubscriptionDetailPage), sub);
+        }
+        else if (Frame.CanGoBack)
+        {
+            Frame.GoBack();
+        }
     }
 
     private void EditTag_Click(object sender, RoutedEventArgs e)
