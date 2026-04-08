@@ -28,6 +28,7 @@ public partial class App : Application
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SubscriptionDetailViewModel>();
         services.AddTransient<ResourceGroupsViewModel>();
+        services.AddTransient<ResourceGroupDetailViewModel>();
         services.AddTransient<ResourcesViewModel>();
         services.AddTransient<TagManagerViewModel>();
         services.AddTransient<LockManagerViewModel>();

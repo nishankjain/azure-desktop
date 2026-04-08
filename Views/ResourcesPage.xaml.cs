@@ -32,6 +32,7 @@ public sealed partial class ResourcesPage : Page
             BreadcrumbItems.Add(ctx.SubscriptionName);
             BreadcrumbItems.Add("Resource Groups");
             BreadcrumbItems.Add(ctx.ResourceGroupName);
+            BreadcrumbItems.Add("Resources");
             Breadcrumb.ItemsSource = BreadcrumbItems;
 
             await ViewModel.LoadForResourceGroupAsync(
@@ -56,8 +57,11 @@ public sealed partial class ResourcesPage : Page
                 Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
                 break;
             case 2:
-                var rgCtx = new NavigationContext(_navCtx.Subscription);
-                Frame.Navigate(typeof(ResourceGroupsPage), rgCtx);
+                var rgListCtx = new NavigationContext(_navCtx.Subscription);
+                Frame.Navigate(typeof(ResourceGroupsPage), rgListCtx);
+                break;
+            case 3:
+                Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx);
                 break;
         }
     }

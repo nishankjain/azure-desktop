@@ -55,8 +55,8 @@ public sealed partial class ResourceGroupsPage : Page
     {
         if (e.ClickedItem is ResourceGroupItem rgItem && _navCtx is not null)
         {
-            var ctx = _navCtx with { ResourceGroupName = rgItem.Name };
-            Frame.Navigate(typeof(ResourcesPage), ctx);
+            var ctx = _navCtx with { ResourceGroupName = rgItem.Name, ResourceGroupLocation = rgItem.Location };
+            Frame.Navigate(typeof(ResourceGroupDetailPage), ctx);
         }
     }
 
