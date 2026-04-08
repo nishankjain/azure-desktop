@@ -47,6 +47,12 @@
                         <TextBlock Text="Manage Locks" />
                     </StackPanel>
                 </Button>
+                <Button Click="ViewFeatures_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="16" Glyph="&#xE7FC;" />
+                        <TextBlock Text="Preview Features" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
 
             <!-- Overview Section -->

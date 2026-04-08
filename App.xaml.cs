@@ -22,6 +22,7 @@ public partial class App : Application
         services.AddSingleton<IApplicationGatewayService, ApplicationGatewayService>();
         services.AddSingleton<ITagService, TagService>();
         services.AddSingleton<ILockService, LockService>();
+        services.AddSingleton<IFeatureService, FeatureService>();
 
         // ViewModels
         services.AddSingleton<SubscriptionsViewModel>();
@@ -32,6 +33,8 @@ public partial class App : Application
         services.AddTransient<ResourcesViewModel>();
         services.AddTransient<TagManagerViewModel>();
         services.AddTransient<LockManagerViewModel>();
+        services.AddTransient<FeaturesViewModel>();
+        services.AddTransient<FeatureDetailViewModel>();
         services.AddTransient<ApplicationGatewayViewModel>();
 
         _serviceProvider = services.BuildServiceProvider();

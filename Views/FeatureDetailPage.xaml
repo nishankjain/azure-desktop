@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="AzureDesktop.Views.FeatureDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel Padding="40" Spacing="24">
+
+            <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked" />
+
+            <StackPanel Spacing="4">
+                <TextBlock FontSize="28" FontWeight="SemiBold" Text="{x:Bind ViewModel.FeatureName, Mode=OneWay}" />
+                <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.FullName, Mode=OneWay}" />
+            </StackPanel>
+
+            <!-- Register / Unregister -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Click="ToggleRegistration_Click" IsEnabled="{x:Bind ViewModel.CanToggle, Mode=OneWay}" Content="{x:Bind ViewModel.ToggleButtonText, Mode=OneWay}" Style="{ThemeResource AccentButtonStyle}" />
+                <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsToggling, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsToggling, Mode=OneWay}" />
+            </StackPanel>
+
+            <!-- Messages -->
+            <InfoBar IsClosable="True" IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" Severity="Success" />
+            <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
+
+            <!-- Details -->
+            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Feature Details" />
+
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                <StackPanel Spacing="16">
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Feature Name" />
+                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.FeatureName, Mode=OneWay}" />
+                    </Grid>
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Provider" />
+                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ProviderNamespace, Mode=OneWay}" />
+                    </Grid>
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="State" />
+                        <Border Grid.Column="1" Padding="8,4" HorizontalAlignment="Left" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4">
+                            <TextBlock FontSize="12" Text="{x:Bind ViewModel.State, Mode=OneWay}" />
+                        </Border>
+                    </Grid>
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource Type" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ResourceType, Mode=OneWay}" />
+                    </Grid>
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" />
+                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ResourceId, Mode=OneWay}" TextWrapping="Wrap" />
+                    </Grid>
+                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Documentation" />
+                        <HyperlinkButton Grid.Column="1" NavigateUri="{x:Bind ViewModel.DocsUri, Mode=OneWay}" Content="{x:Bind ViewModel.DocsUri, Mode=OneWay}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <InfoBar IsClosable="False" IsOpen="True" Message="Release date and description are not available via the Azure Features API. Check the documentation link above for detailed feature information." Severity="Informational" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -69,4 +69,12 @@ public sealed partial class SubscriptionDetailPage : Page
             await LockManagerDialog.ShowAsync($"/subscriptions/{_item.Id}", XamlRoot);
         }
     }
+
+    private void ViewFeatures_Click(object sender, RoutedEventArgs e)
+    {
+        if (_item is not null)
+        {
+            Frame.Navigate(typeof(FeaturesPage), _item);
+        }
+    }
 }
