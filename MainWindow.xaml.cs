@@ -1,3 +1,5 @@
+using AzureDesktop.Controls;
+using AzureDesktop.ViewModels;
 using AzureDesktop.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,49 +8,134 @@ namespace AzureDesktop;
 
 public sealed partial class MainWindow : Window
 {
+    private const double CompactThreshold = 640;
+
+    private SubscriptionItem? _activeSubscription;
+    private readonly List<NavigationViewItem> _subscriptionNavItems = [];
+
     public MainWindow()
     {
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
-        AppWindow.SetIcon("Assets/AppIcon.ico");
 
         ContentFrame.Navigated += ContentFrame_Navigated;
+        NavView.DisplayModeChanged += NavView_DisplayModeChanged;
+        SizeChanged += MainWindow_SizeChanged;
 
-        // Navigate to Home on startup
         ContentFrame.Navigate(typeof(HomePage));
         NavView.SelectedItem = NavView.MenuItems[0];
     }
 
-    private void ContentFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
     {
-        var canGoBack = ContentFrame.CanGoBack;
-        NavView.IsBackButtonVisible = canGoBack
-            ? NavigationViewBackButtonVisible.Visible
-            : NavigationViewBackButtonVisible.Collapsed;
-        NavView.IsBackEnabled = canGoBack;
+        UpdatePaneMode(args.Size.Width);
+    }
 
-        // Keep the correct nav item selected for drill-down pages
-        if (e.SourcePageType == typeof(SubscriptionsPage)
-            || e.SourcePageType == typeof(SubscriptionDetailPage)
-            || e.SourcePageType == typeof(ResourceGroupsPage)
-            || e.SourcePageType == typeof(ResourceGroupDetailPage)
-            || e.SourcePageType == typeof(ResourcesPage)
-            || e.SourcePageType == typeof(FeaturesPage)
-            || e.SourcePageType == typeof(FeatureDetailPage)
-            || e.SourcePageType == typeof(ResourceProvidersPage)
-            || e.SourcePageType == typeof(ResourceProviderDetailPage))
+    private void UpdatePaneMode(double width)
+    {
+        if (width < CompactThreshold)
         {
-            NavView.SelectedItem = NavView.MenuItems[1];
+            NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
+            NavView.IsPaneOpen = false;
+            PaneToggleButton.Visibility = Visibility.Visible;
         }
-        else if (e.SourcePageType == typeof(HomePage))
+        else
         {
-            NavView.SelectedItem = NavView.MenuItems[0];
+            NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
+            PaneToggleButton.Visibility = Visibility.Collapsed;
         }
     }
 
-    private void NavView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+    private void NavView_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
+    {
+        PaneToggleButton.Visibility = args.DisplayMode == NavigationViewDisplayMode.Minimal
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void ContentFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        BackButton.Visibility = ContentFrame.CanGoBack
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        // Track active subscription from navigation parameter
+        if (e.Parameter is SubscriptionItem sub)
+        {
+            _activeSubscription = sub;
+        }
+        else if (e.Parameter is NavigationContext ctx)
+        {
+            _activeSubscription = ctx.Subscription;
+        }
+        else if (e.SourcePageType == typeof(HomePage) || e.SourcePageType == typeof(SubscriptionsPage))
+        {
+            _activeSubscription = null;
+        }
+
+        UpdateSubscriptionNavItems(e.SourcePageType);
+    }
+
+    private void UpdateSubscriptionNavItems(Type pageType)
+    {
+        // Remove old subscription nav items
+        foreach (var item in _subscriptionNavItems)
+        {
+            NavView.MenuItems.Remove(item);
+        }
+
+        _subscriptionNavItems.Clear();
+
+        var isSubscriptionScope = _activeSubscription is not null && pageType != typeof(SubscriptionsPage);
+
+        if (!isSubscriptionScope)
+        {
+            NavView.SelectedItem = NavView.MenuItems[0];
+            return;
+        }
+
+        // Add subscription context header
+        var subHeader = CreateNavItem(_activeSubscription!.Name, "SubscriptionDetail", "\xE8CB");
+        var resourceGroups = CreateNavItem("Resource Groups", "ResourceGroups", "\xE8B7");
+        var manageTags = CreateNavItem("Manage Tags", "ManageTags", "\xE1CB");
+        var manageLocks = CreateNavItem("Manage Locks", "ManageLocks", "\xE72E");
+        var previewFeatures = CreateNavItem("Preview Features", "PreviewFeatures", "\xE7FC");
+        var resourceProviders = CreateNavItem("Resource Providers", "ResourceProviders", "\xE74C");
+
+        _subscriptionNavItems.AddRange([subHeader, resourceGroups, manageTags, manageLocks, previewFeatures, resourceProviders]);
+
+        // Add separator + items after Home
+        foreach (var item in _subscriptionNavItems)
+        {
+            NavView.MenuItems.Add(item);
+        }
+
+        // Highlight the active item
+        NavigationViewItem? activeItem = pageType switch
+        {
+            var t when t == typeof(SubscriptionDetailPage) => subHeader,
+            var t when t == typeof(ResourceGroupsPage) || t == typeof(ResourceGroupDetailPage) || t == typeof(ResourcesPage) => resourceGroups,
+            var t when t == typeof(FeaturesPage) || t == typeof(FeatureDetailPage) => previewFeatures,
+            var t when t == typeof(ResourceProvidersPage) || t == typeof(ResourceProviderDetailPage) => resourceProviders,
+            _ => subHeader,
+        };
+
+        NavView.SelectedItem = activeItem;
+    }
+
+    private static NavigationViewItem CreateNavItem(string content, string tag, string glyph)
+    {
+        return new NavigationViewItem
+        {
+            Content = content,
+            Tag = tag,
+            Icon = new FontIcon { Glyph = glyph },
+        };
+    }
+
+    private void BackButton_Click(object sender, RoutedEventArgs e)
     {
         if (ContentFrame.CanGoBack)
         {
@@ -56,24 +143,52 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private void PaneToggle_Click(object sender, RoutedEventArgs e)
+    {
+        NavView.IsPaneOpen = !NavView.IsPaneOpen;
+    }
+
     private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
         if (args.InvokedItemContainer is not NavigationViewItem item)
+        {
             return;
+        }
 
         var tag = item.Tag?.ToString();
-        var pageType = tag switch
-        {
-            "Home" => typeof(HomePage),
-            "Subscriptions" => typeof(SubscriptionsPage),
-            "ApplicationGateway" => typeof(ApplicationGatewayPage),
-            _ => null
-        };
 
-        if (pageType is not null && ContentFrame.CurrentSourcePageType != pageType)
+        // Handle subscription sub-nav items
+        if (_activeSubscription is not null)
         {
+            switch (tag)
+            {
+                case "SubscriptionDetail":
+                    ContentFrame.Navigate(typeof(SubscriptionDetailPage), _activeSubscription);
+                    return;
+                case "ResourceGroups":
+                    ContentFrame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_activeSubscription));
+                    return;
+                case "ManageTags":
+                    _ = TagManagerDialog.ShowAsync($"/subscriptions/{_activeSubscription.Id}", Content.XamlRoot);
+                    return;
+                case "ManageLocks":
+                    _ = LockManagerDialog.ShowAsync($"/subscriptions/{_activeSubscription.Id}", Content.XamlRoot);
+                    return;
+                case "PreviewFeatures":
+                    ContentFrame.Navigate(typeof(FeaturesPage), _activeSubscription);
+                    return;
+                case "ResourceProviders":
+                    ContentFrame.Navigate(typeof(ResourceProvidersPage), _activeSubscription);
+                    return;
+            }
+        }
+
+        // Handle top-level nav items
+        if (tag == "Home" && ContentFrame.CurrentSourcePageType != typeof(HomePage))
+        {
+            _activeSubscription = null;
             ContentFrame.BackStack.Clear();
-            ContentFrame.Navigate(pageType);
+            ContentFrame.Navigate(typeof(HomePage));
         }
     }
 }

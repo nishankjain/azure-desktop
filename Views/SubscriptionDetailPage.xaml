@@ -27,40 +27,6 @@
                     Text="{x:Bind ViewModel.Subscription.Id, Mode=OneWay}" />
             </StackPanel>
 
-            <!-- Actions -->
-            <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Click="ViewResourceGroups_Click" Style="{ThemeResource AccentButtonStyle}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="&#xE8B7;" />
-                        <TextBlock Text="View Resource Groups" />
-                    </StackPanel>
-                </Button>
-                <Button Click="ManageTags_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="&#xE1CB;" />
-                        <TextBlock Text="Manage Tags" />
-                    </StackPanel>
-                </Button>
-                <Button Click="ManageLocks_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="&#xE72E;" />
-                        <TextBlock Text="Manage Locks" />
-                    </StackPanel>
-                </Button>
-                <Button Click="ViewFeatures_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="&#xE7FC;" />
-                        <TextBlock Text="Preview Features" />
-                    </StackPanel>
-                </Button>
-                <Button Click="ViewResourceProviders_Click">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon FontSize="16" Glyph="&#xE74C;" />
-                        <TextBlock Text="Resource Providers" />
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-
             <!-- Overview Section -->
             <TextBlock
                 FontSize="16"

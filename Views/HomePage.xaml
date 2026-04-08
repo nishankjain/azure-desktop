@@ -52,12 +52,15 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <Border
+                    <Button
                         Grid.Column="0"
                         Padding="20"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
+                        Click="Subscriptions_Click"
                         CornerRadius="8">
                         <StackPanel Spacing="8">
                             <FontIcon FontSize="28" Glyph="&#xE8CB;" />
@@ -67,14 +70,17 @@
                                 Text="Browse all your Azure subscriptions"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                    </Border>
+                    </Button>
 
-                    <Border
+                    <Button
                         Grid.Column="1"
                         Padding="20"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
+                        Click="ApplicationGateway_Click"
                         CornerRadius="8">
                         <StackPanel Spacing="8">
                             <FontIcon FontSize="28" Glyph="&#xE968;" />
@@ -84,7 +90,7 @@
                                 Text="Create and manage application gateways"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                    </Border>
+                    </Button>
                 </Grid>
             </StackPanel>
         </StackPanel>

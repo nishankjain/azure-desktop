@@ -18,35 +18,58 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar x:Name="AppTitleBar" Title="Azure Desktop">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="Assets/AppIcon.ico" />
-            </TitleBar.IconSource>
-        </TitleBar>
+        <!-- Custom title bar with back button -->
+        <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                x:Name="BackButton"
+                Grid.Column="0"
+                Width="44"
+                Height="32"
+                Margin="4,0,0,0"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Back"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="BackButton_Click"
+                Visibility="Collapsed">
+                <FontIcon FontSize="12" Glyph="&#xE72B;" />
+            </Button>
+            <Button
+                x:Name="PaneToggleButton"
+                Grid.Column="1"
+                Width="44"
+                Height="32"
+                Margin="0"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Toggle navigation"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="PaneToggle_Click"
+                Visibility="Collapsed">
+                <FontIcon FontSize="16" Glyph="&#xE700;" />
+            </Button>
+        </Grid>
 
+        <!-- Navigation view (no back button, no header) -->
         <NavigationView
             x:Name="NavView"
             Grid.Row="1"
-            BackRequested="NavView_BackRequested"
             IsBackButtonVisible="Collapsed"
+            IsPaneToggleButtonVisible="False"
             IsSettingsVisible="False"
             ItemInvoked="NavView_ItemInvoked"
+            OpenPaneLength="240"
             PaneDisplayMode="Left">
 
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Home" Tag="Home">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE80F;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Subscriptions" Tag="Subscriptions">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8CB;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Application Gateway" Tag="ApplicationGateway">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE968;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
