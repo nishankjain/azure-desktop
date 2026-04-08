@@ -132,4 +132,13 @@ public sealed partial class ResourcesPage : Page
         _suppressFilterEvents = false;
         ViewModel.ClearFilters();
     }
+
+    private void Resource_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Border { Tag: ResourceItem item } && _navCtx is not null)
+        {
+            var ctx = _navCtx with { Resource = item };
+            Frame.Navigate(typeof(ResourceDetailPage), ctx);
+        }
+    }
 }

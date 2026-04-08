@@ -8,7 +8,7 @@
     xmlns:vm="using:AzureDesktop.ViewModels"
     mc:Ignorable="d">
 
-    <Grid Padding="40">
+    <Grid Padding="16,8,40,40">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -134,19 +134,29 @@
                                             Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="8">
+                                            CornerRadius="8"
+                                            PointerPressed="Resource_PointerPressed"
+                                            Tag="{x:Bind}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" VerticalAlignment="Center" />
                                                 <TextBlock
                                                     Grid.Column="1"
                                                     FontSize="12"
+                                                    Margin="8,0"
                                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                     VerticalAlignment="Center"
                                                     Text="{x:Bind Location}" />
+                                                <FontIcon
+                                                    Grid.Column="2"
+                                                    FontSize="12"
+                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                    Glyph="&#xE76C;"
+                                                    VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

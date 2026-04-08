@@ -9,7 +9,7 @@ public partial class HomeViewModel(IAzureAuthService authService) : ObservableOb
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SignInButtonText))]
     [NotifyPropertyChangedFor(nameof(StatusMessage))]
-    public partial bool IsAuthenticated { get; set; }
+    public partial bool IsAuthenticated { get; set; } = authService.IsAuthenticated;
 
     [ObservableProperty]
     public partial bool IsSigningIn { get; set; }

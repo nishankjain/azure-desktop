@@ -5,11 +5,12 @@ using AzureDesktop.Services;
 
 namespace AzureDesktop.ViewModels;
 
-public partial class ResourceItem(string name, string type, string location)
+public partial class ResourceItem(string name, string type, string location, string resourceId)
 {
     public string Name { get; } = name;
     public string Type { get; } = type;
     public string Location { get; } = location;
+    public string ResourceId { get; } = resourceId;
 }
 
 public sealed class ResourceTypeGroup(string typeName, IReadOnlyList<ResourceItem> resources)
@@ -96,7 +97,8 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
                 var item = new ResourceItem(
                     resource.Data.Name,
                     resource.Data.ResourceType.ToString(),
-                    resource.Data.Location.DisplayName ?? "");
+                    resource.Data.Location.DisplayName ?? "",
+                    resource.Data.Id?.ToString() ?? "");
                 _allResources.Add(item);
                 types.Add(item.Type);
                 locations.Add(item.Location);

@@ -6,7 +6,8 @@ namespace AzureDesktop.ViewModels;
 public sealed record NavigationContext(
     SubscriptionItem Subscription,
     string? ResourceGroupName = null,
-    string? ResourceGroupLocation = null)
+    string? ResourceGroupLocation = null,
+    ResourceItem? Resource = null)
 {
     public string SubscriptionId => Subscription.Id;
     public string SubscriptionName => Subscription.Name;

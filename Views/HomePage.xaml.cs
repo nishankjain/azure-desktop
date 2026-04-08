@@ -18,9 +18,4 @@ public sealed partial class HomePage : Page
     {
         Frame.Navigate(typeof(SubscriptionsPage));
     }
-
-    private void ApplicationGateway_Click(object sender, RoutedEventArgs e)
-    {
-        Frame.Navigate(typeof(ApplicationGatewayPage));
-    }
 }

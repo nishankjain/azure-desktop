@@ -18,9 +18,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Custom title bar with back button -->
+        <!-- Custom title bar with back + home buttons -->
         <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -40,8 +41,21 @@
                 <FontIcon FontSize="12" Glyph="&#xE72B;" />
             </Button>
             <Button
-                x:Name="PaneToggleButton"
+                x:Name="HomeButton"
                 Grid.Column="1"
+                Width="44"
+                Height="32"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Home"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="HomeButton_Click"
+                ToolTipService.ToolTip="Home">
+                <FontIcon FontSize="14" Glyph="&#xE80F;" />
+            </Button>
+            <Button
+                x:Name="PaneToggleButton"
+                Grid.Column="2"
                 Width="44"
                 Height="32"
                 Margin="0"
@@ -65,14 +79,6 @@
             ItemInvoked="NavView_ItemInvoked"
             OpenPaneLength="240"
             PaneDisplayMode="Left">
-
-            <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" Tag="Home">
-                    <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE80F;" />
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame" />
         </NavigationView>
