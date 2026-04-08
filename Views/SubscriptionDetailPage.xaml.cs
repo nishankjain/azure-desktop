@@ -77,4 +77,12 @@ public sealed partial class SubscriptionDetailPage : Page
             Frame.Navigate(typeof(FeaturesPage), _item);
         }
     }
+
+    private void ViewResourceProviders_Click(object sender, RoutedEventArgs e)
+    {
+        if (_item is not null)
+        {
+            Frame.Navigate(typeof(ResourceProvidersPage), _item);
+        }
+    }
 }

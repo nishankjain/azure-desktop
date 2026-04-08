@@ -36,7 +36,9 @@ public sealed partial class MainWindow : Window
             || e.SourcePageType == typeof(ResourceGroupDetailPage)
             || e.SourcePageType == typeof(ResourcesPage)
             || e.SourcePageType == typeof(FeaturesPage)
-            || e.SourcePageType == typeof(FeatureDetailPage))
+            || e.SourcePageType == typeof(FeatureDetailPage)
+            || e.SourcePageType == typeof(ResourceProvidersPage)
+            || e.SourcePageType == typeof(ResourceProviderDetailPage))
         {
             NavView.SelectedItem = NavView.MenuItems[1];
         }
