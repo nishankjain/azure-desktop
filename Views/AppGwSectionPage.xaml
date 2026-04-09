@@ -7,29 +7,31 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <ScrollViewer>
-        <StackPanel Padding="16,8,40,40">
-            <BreadcrumbBar x:Name="Breadcrumb" FontSize="14" ItemClicked="Breadcrumb_ItemClicked" />
+    <Grid Padding="16,8,40,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                <TextBlock x:Name="SectionTitleText" FontSize="28" FontWeight="SemiBold" />
-                <ProgressRing Width="24" Height="24" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" FontSize="14" ItemClicked="Breadcrumb_ItemClicked" />
+
+        <Grid Grid.Row="1" Margin="0,8,0,0">
+            <TextBlock x:Name="SectionTitleText" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Left" />
+            <StackPanel x:Name="StatusPanel" Orientation="Horizontal" Spacing="8" Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <ProgressRing x:Name="StatusSpinner" Width="14" Height="14" IsActive="True" />
+                <FontIcon x:Name="StatusIcon" FontSize="14" Visibility="Collapsed" />
+                <TextBlock x:Name="StatusText" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
+        </Grid>
 
-            <InfoBar Margin="0,8,0,0" IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
-            <InfoBar Margin="0,4,0,0" IsClosable="True" IsOpen="{x:Bind ViewModel.SaveMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SaveMessage, Mode=OneWay}" Severity="Success" />
-
-            <!-- Saving indicator -->
-            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0" Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay}">
-                <ProgressRing Width="20" Height="20" IsActive="True" />
-                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Saving changes to Azure... This may take a minute." />
-            </StackPanel>
-
-            <!-- Search box for collection sections -->
-            <TextBox x:Name="SearchBox" Margin="0,8,0,0" Width="300" HorizontalAlignment="Left" PlaceholderText="Search by name..." TextChanged="SearchBox_TextChanged" Visibility="Collapsed" />
-
-            <!-- Dynamic content area -->
-            <StackPanel x:Name="ContentArea" Margin="0,8,0,0" />
+        <StackPanel x:Name="SearchAddPanel" Grid.Row="2" Margin="0,8,0,0" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+            <TextBox x:Name="SearchBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchBox_TextChanged" />
+            <Button x:Name="AddNewButton" Click="AddNew_Click" Content="Add New" Style="{ThemeResource AccentButtonStyle}" />
         </StackPanel>
-    </ScrollViewer>
+
+        <!-- Row 3 fills remaining space - ContentArea renders the table here -->
+        <Grid x:Name="ContentArea" Grid.Row="3" Margin="0,8,0,0" />
+    </Grid>
 </Page>

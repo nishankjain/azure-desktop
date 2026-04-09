@@ -31,6 +31,8 @@ public sealed partial class AppGwSectionPage : Page
             _section = section;
             SectionTitle = SectionToTitle(section);
             SectionTitleText.Text = SectionTitle;
+            ClearNotifications();
+            
 
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");
@@ -86,11 +88,12 @@ public sealed partial class AppGwSectionPage : Page
     private void RenderSection()
     {
         ContentArea.Children.Clear();
+        ContentArea.RowDefinitions.Clear();
         _currentCollection = null;
         _currentColumns = null;
         _confirmDeleteName = null;
         _isCollectionSection = false;
-        SearchBox.Visibility = Visibility.Collapsed;
+        SearchAddPanel.Visibility = Visibility.Collapsed;
 
         switch (_section)
         {
@@ -153,7 +156,7 @@ public sealed partial class AppGwSectionPage : Page
                 }
                 break;
             case AppGwSection.Listeners:
-                RenderTable(ViewModel.HttpListeners, ["Name", "Protocol", "Host Name", "Require SNI"], "No listeners configured.");
+                RenderTable(ViewModel.HttpListeners, ["Name", "Protocol", "Host Name", "Frontend Port", "Require SNI"], "No listeners configured.");
                 break;
             case AppGwSection.RoutingRules:
                 RenderTable(ViewModel.RoutingRules, ["Name", "Rule Type", "Priority", "Listener", "Backend Pool", "Backend Settings"], "No routing rules configured.");
@@ -189,7 +192,9 @@ public sealed partial class AppGwSectionPage : Page
         _confirmDeleteName = null;
         _isCollectionSection = true;
         SearchBox.Text = "";
-        SearchBox.Visibility = Visibility.Visible;
+        SearchAddPanel.Visibility = Visibility.Visible;
+        AddNewButton.Visibility = AppGwViewModel.GetEditableFields(_section).Count > 0
+            ? Visibility.Visible : Visibility.Collapsed;
 
         if (items.Count == 0 && !string.IsNullOrEmpty(emptyMessage))
         {
@@ -211,11 +216,10 @@ public sealed partial class AppGwSectionPage : Page
 
         for (int i = ContentArea.Children.Count - 1; i >= 0; i--)
         {
-            if (ContentArea.Children[i] is Border { Tag: string t } && t == "table")
-            {
-                ContentArea.Children.RemoveAt(i);
-            }
+            ContentArea.Children.RemoveAt(i);
         }
+
+        ContentArea.RowDefinitions.Clear();
 
         var filtered = _currentCollection.AsEnumerable();
 
@@ -236,10 +240,14 @@ public sealed partial class AppGwSectionPage : Page
         var rows = filtered.ToList();
         var columns = _currentColumns;
 
-        var tableStack = new StackPanel();
+        // Build table as a Grid with frozen header
+        var tableGrid = new Grid();
+        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // header
+        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // divider
+        tableGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // data
 
         // Header row
-        var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 4) };
+        var headerGrid = new Grid { Margin = new Thickness(12, 8, 12, 0) };
         for (int c = 0; c < columns.Count; c++)
         {
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -262,7 +270,6 @@ public sealed partial class AppGwSectionPage : Page
             headerGrid.Children.Add(headerBtn);
         }
 
-        // Actions column header
         if (_isCollectionSection)
         {
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -278,14 +285,20 @@ public sealed partial class AppGwSectionPage : Page
             headerGrid.Children.Add(actionsHeader);
         }
 
-        tableStack.Children.Add(headerGrid);
+        Grid.SetRow(headerGrid, 0);
+        tableGrid.Children.Add(headerGrid);
 
-        tableStack.Children.Add(new Border
+        var divider = new Border
         {
             Height = 1,
-            Margin = new Thickness(0, 0, 0, 4),
+            Margin = new Thickness(12, 4, 12, 0),
             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"]
-        });
+        };
+        Grid.SetRow(divider, 1);
+        tableGrid.Children.Add(divider);
+
+        // Data rows (inside a ScrollViewer)
+        var dataStack = new StackPanel { Padding = new Thickness(12, 4, 12, 12) };
 
         // Data rows
         foreach (var row in rows)
@@ -327,7 +340,7 @@ public sealed partial class AppGwSectionPage : Page
                 confirmGrid.Children.Add(confirmText);
                 confirmGrid.Children.Add(confirmBtn);
                 confirmGrid.Children.Add(cancelBtn);
-                tableStack.Children.Add(confirmGrid);
+                dataStack.Children.Add(confirmGrid);
             }
             else
             {
@@ -361,6 +374,22 @@ public sealed partial class AppGwSectionPage : Page
                     rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                     var actionsPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
 
+                    var editFields = AppGwViewModel.GetEditableFields(_section);
+                    if (editFields.Count > 0)
+                    {
+                        var editBtn = new Button
+                        {
+                            Width = 32, Height = 32, Padding = new Thickness(0),
+                            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                            BorderThickness = new Thickness(0),
+                            Tag = rowName,
+                        };
+                        editBtn.Content = new FontIcon { Glyph = "\uE70F", FontSize = 14 };
+                        ToolTipService.SetToolTip(editBtn, "Edit");
+                        editBtn.Click += EditRow_Click;
+                        actionsPanel.Children.Add(editBtn);
+                    }
+
                     var deleteBtn = new Button
                     {
                         Width = 32, Height = 32, Padding = new Thickness(0),
@@ -377,10 +406,10 @@ public sealed partial class AppGwSectionPage : Page
                     rowGrid.Children.Add(actionsPanel);
                 }
 
-                tableStack.Children.Add(rowGrid);
+                dataStack.Children.Add(rowGrid);
             }
 
-            tableStack.Children.Add(new Border
+            dataStack.Children.Add(new Border
             {
                 Height = 1,
                 Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"],
@@ -388,17 +417,26 @@ public sealed partial class AppGwSectionPage : Page
             });
         }
 
+        var dataScrollViewer = new ScrollViewer
+        {
+            Content = dataStack,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
+        Grid.SetRow(dataScrollViewer, 2);
+        tableGrid.Children.Add(dataScrollViewer);
+
         var tableBorder = new Border
         {
-            Padding = new Thickness(12),
             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
             BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8),
-            Child = tableStack,
+            Child = tableGrid,
             Tag = "table",
         };
 
+        ContentArea.RowDefinitions.Clear();
+        ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         ContentArea.Children.Add(tableBorder);
     }
 
@@ -425,10 +463,271 @@ public sealed partial class AppGwSectionPage : Page
             var deleted = ViewModel.DeleteItem(_section, name);
             if (deleted)
             {
-                await ViewModel.SaveChangesAsync($"Deleted '{name}' successfully.");
+                ShowSaving();
+                try
+                {
+                    var saved = await ViewModel.SaveChangesAsync($"Deleted '{name}'.");
+                    if (saved)
+                    {
+                        ShowStatus($"Deleted '{name}' successfully.");
+                    }
+                    else
+                    {
+                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to delete.", isError: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowStatus($"Error: {ex.Message}", isError: true);
+                }
+
+                
                 RenderSection();
             }
         }
+    }
+
+    private DispatcherTimer? _autoDismissTimer;
+
+    private void ShowStatus(string message, bool isError = false)
+    {
+        _autoDismissTimer?.Stop();
+        StatusSpinner.Visibility = Visibility.Collapsed;
+        StatusIcon.Visibility = Visibility.Visible;
+
+        if (isError)
+        {
+            StatusIcon.Glyph = "\uEA39";
+            StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+        }
+        else
+        {
+            StatusIcon.Glyph = "\uE73E";
+            StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
+        }
+
+        StatusText.Text = message;
+        StatusPanel.Visibility = Visibility.Visible;
+
+        if (!isError)
+        {
+            _autoDismissTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
+            _autoDismissTimer.Tick += (_, _) => { StatusPanel.Visibility = Visibility.Collapsed; _autoDismissTimer.Stop(); };
+            _autoDismissTimer.Start();
+        }
+    }
+
+    private void ShowSaving()
+    {
+        _autoDismissTimer?.Stop();
+        StatusSpinner.Visibility = Visibility.Visible;
+        StatusIcon.Visibility = Visibility.Collapsed;
+        StatusText.Text = "Saving to Azure...";
+        StatusPanel.Visibility = Visibility.Visible;
+    }
+
+    private void ClearNotifications()
+    {
+        _autoDismissTimer?.Stop();
+        StatusPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void EditRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string name })
+        {
+            var row = _currentCollection?.FirstOrDefault(r => r.TryGetValue("Name", out var n) && n == name);
+            if (row is not null)
+            {
+                _ = ShowEditDialogAsync(name, new Dictionary<string, string>(row));
+            }
+        }
+    }
+
+    private async void AddNew_Click(object sender, RoutedEventArgs e)
+    {
+        var fields = AppGwViewModel.GetEditableFields(_section);
+        var values = new Dictionary<string, string>();
+        foreach (var (field, _) in fields)
+        {
+            values[field] = "";
+        }
+
+        await ShowAddDialogAsync(values);
+    }
+
+    private async Task ShowEditDialogAsync(string originalName, Dictionary<string, string> values)
+    {
+        var fields = AppGwViewModel.GetEditableFields(_section);
+        if (fields.Count == 0) return;
+
+        var editedValues = await ShowFieldDialogAsync($"Edit: {originalName}", fields, values, isEdit: true);
+        if (editedValues is not null)
+        {
+            ShowSaving();
+            try
+            {
+                var edited = ViewModel.EditItem(_section, originalName, editedValues);
+                if (edited)
+                {
+                    var saved = await ViewModel.SaveChangesAsync($"Updated '{originalName}'.");
+                    if (saved)
+                    {
+                        ShowStatus($"Updated '{originalName}' successfully.");
+                    }
+                    else
+                    {
+                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
+                    }
+                }
+                else
+                {
+                    ShowStatus($"Could not edit '{originalName}'.", isError: true);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatus($"Error: {ex.Message}", isError: true);
+            }
+
+            
+            RenderSection();
+        }
+    }
+
+    private async Task ShowAddDialogAsync(Dictionary<string, string> values)
+    {
+        var fields = AppGwViewModel.GetEditableFields(_section);
+        if (fields.Count == 0) return;
+
+        var editedValues = await ShowFieldDialogAsync("Add New", fields, values, isEdit: false);
+        if (editedValues is not null)
+        {
+            var name = editedValues.GetValueOrDefault("Name") ?? "";
+            ShowSaving();
+            try
+            {
+                var added = ViewModel.AddItem(_section, editedValues);
+                if (added)
+                {
+                    var saved = await ViewModel.SaveChangesAsync($"Added '{name}'.");
+                    if (saved)
+                    {
+                        ShowStatus($"Added '{name}' successfully.");
+                    }
+                    else
+                    {
+                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
+                    }
+                }
+                else
+                {
+                    ShowStatus("Could not add item. Check required fields.", isError: true);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatus($"Error: {ex.Message}", isError: true);
+            }
+
+            
+            RenderSection();
+        }
+    }
+
+    // Field definitions that should use a ComboBox instead of TextBox
+    private static readonly Dictionary<string, string[]> ComboFields = new()
+    {
+        ["Protocol"] = ["Http", "Https"],
+        ["Cookie Affinity"] = ["Enabled", "Disabled"],
+        ["Rule Type"] = ["Basic", "PathBasedRouting"],
+        ["Require SNI"] = ["True", "False"],
+        ["Pick Host From Backend"] = ["True", "False"],
+    };
+
+    private async Task<Dictionary<string, string>?> ShowFieldDialogAsync(
+        string title,
+        List<(string Field, string Placeholder)> fields,
+        Dictionary<string, string> values,
+        bool isEdit)
+    {
+        var stack = new StackPanel { Spacing = 12, MinWidth = 400 };
+        var controls = new Dictionary<string, object>(); // TextBox or ComboBox
+
+        foreach (var (field, placeholder) in fields)
+        {
+            var isNameOnEdit = field == "Name" && isEdit;
+            var fieldStack = new StackPanel { Spacing = 4 };
+            fieldStack.Children.Add(new TextBlock
+            {
+                Text = field,
+                FontSize = 12,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            });
+
+            var currentValue = values.GetValueOrDefault(field) ?? "";
+
+            if (ComboFields.TryGetValue(field, out var options) && !isNameOnEdit)
+            {
+                var combo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+                foreach (var opt in options)
+                {
+                    combo.Items.Add(opt);
+                }
+
+                combo.SelectedItem = options.FirstOrDefault(o => o.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
+                if (combo.SelectedItem is null && options.Length > 0)
+                {
+                    combo.SelectedIndex = 0;
+                }
+
+                controls[field] = combo;
+                fieldStack.Children.Add(combo);
+            }
+            else
+            {
+                var textBox = new TextBox
+                {
+                    PlaceholderText = placeholder,
+                    Text = currentValue,
+                    IsReadOnly = isNameOnEdit,
+                };
+                controls[field] = textBox;
+                fieldStack.Children.Add(textBox);
+            }
+
+            stack.Children.Add(fieldStack);
+        }
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = stack,
+            PrimaryButtonText = isEdit ? "Save" : "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot,
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary)
+        {
+            var editedValues = new Dictionary<string, string>();
+            foreach (var (field, _) in fields)
+            {
+                editedValues[field] = controls[field] switch
+                {
+                    TextBox tb => tb.Text,
+                    ComboBox cb => cb.SelectedItem?.ToString() ?? "",
+                    _ => "",
+                };
+            }
+
+            return editedValues;
+        }
+
+        return null;
     }
 
     private void HeaderButton_Click(object sender, RoutedEventArgs e)
@@ -477,7 +776,7 @@ public sealed partial class AppGwSectionPage : Page
             stack.Children.Add(grid);
         }
 
-        ContentArea.Children.Add(new Border
+        var card = new Border
         {
             Padding = new Thickness(20),
             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
@@ -485,7 +784,11 @@ public sealed partial class AppGwSectionPage : Page
             BorderThickness = new Thickness(1),
             CornerRadius = new CornerRadius(8),
             Child = stack,
-        });
+        };
+
+        var scrollViewer = new ScrollViewer { Content = card };
+        ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        ContentArea.Children.Add(scrollViewer);
     }
 
     private void AddSectionHeader(string text)

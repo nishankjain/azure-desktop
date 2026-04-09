@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Network;
+using Azure.ResourceManager.Network.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using AzureDesktop.Services;
 
@@ -304,6 +305,9 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
                 ["Protocol"] = l.Protocol?.ToString() ?? "",
                 ["Host Name"] = l.HostName ?? "",
                 ["Require SNI"] = (l.RequireServerNameIndication ?? false).ToString(),
+                ["Frontend IP"] = l.FrontendIPConfigurationId?.Name ?? "",
+                ["Frontend Port"] = l.FrontendPortId?.Name ?? "",
+                ["SSL Certificate"] = l.SslCertificateId?.Name ?? "",
             });
         }
     }
@@ -486,5 +490,234 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
             AppGwSection.PrivateLink => DeletePrivateLink(name),
             _ => false,
         };
+    }
+
+    /// <summary>Returns editable field definitions for a section (field name, placeholder).</summary>
+    public static List<(string Field, string Placeholder)> GetEditableFields(AppGwSection section) => section switch
+    {
+        AppGwSection.BackendPools => [("Name", "Pool name"), ("Addresses", "Comma-separated IPs/FQDNs")],
+        AppGwSection.BackendSettings => [("Name", "Settings name"), ("Protocol", "Http/Https"), ("Port", "80"), ("Cookie Affinity", "Enabled/Disabled"), ("Request Timeout", "30"), ("Host Name", "hostname")],
+        AppGwSection.Listeners => [("Name", "Listener name"), ("Protocol", "Http/Https"), ("Host Name", "*.example.com"), ("Require SNI", "True/False"), ("Frontend IP", "Frontend IP config name"), ("Frontend Port", "Frontend port name"), ("SSL Certificate", "SSL cert name (for HTTPS)")],
+        AppGwSection.RoutingRules => [("Name", "Rule name"), ("Rule Type", "Basic/PathBasedRouting"), ("Priority", "100"), ("Listener", "Listener name"), ("Backend Pool", "Backend pool name"), ("Backend Settings", "Backend settings name")],
+        AppGwSection.HealthProbes => [("Name", "Probe name"), ("Protocol", "Http/Https"), ("Host", "hostname"), ("Path", "/health"), ("Interval", "30"), ("Timeout", "30"), ("Unhealthy Threshold", "3"), ("Pick Host From Backend", "True/False")],
+        AppGwSection.FrontendIP => [("Name", "Port name"), ("Port", "80")],
+        AppGwSection.SslSettings => [("Name", "Certificate name")],
+        AppGwSection.RewriteSets => [("Name", "Rewrite set name")],
+        _ => [],
+    };
+
+    public bool EditItem(AppGwSection section, string originalName, Dictionary<string, string> values)
+    {
+        if (_data is null) return false;
+
+        switch (section)
+        {
+            case AppGwSection.BackendPools:
+                var pool = _data.BackendAddressPools.FirstOrDefault(p => p.Name == originalName);
+                if (pool is null) return false;
+                pool.BackendAddresses.Clear();
+                foreach (var addr in (values.GetValueOrDefault("Addresses") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    var ba = new ApplicationGatewayBackendAddress();
+                    if (System.Net.IPAddress.TryParse(addr, out _))
+                        ba.IPAddress = addr;
+                    else
+                        ba.Fqdn = addr;
+                    pool.BackendAddresses.Add(ba);
+                }
+                return true;
+
+            case AppGwSection.BackendSettings:
+                var setting = _data.BackendHttpSettingsCollection.FirstOrDefault(s => s.Name == originalName);
+                if (setting is null) return false;
+                if (values.TryGetValue("Protocol", out var proto))
+                    setting.Protocol = proto.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Port", out var portStr) && int.TryParse(portStr, out var port))
+                    setting.Port = port;
+                if (values.TryGetValue("Cookie Affinity", out var cookie))
+                    setting.CookieBasedAffinity = cookie.Equals("Enabled", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayCookieBasedAffinity.Enabled : ApplicationGatewayCookieBasedAffinity.Disabled;
+                if (values.TryGetValue("Request Timeout", out var timeoutStr) && int.TryParse(timeoutStr.TrimEnd('s'), out var timeout))
+                    setting.RequestTimeoutInSeconds = timeout;
+                if (values.TryGetValue("Host Name", out var host))
+                    setting.HostName = host;
+                return true;
+
+            case AppGwSection.Listeners:
+                var listener = _data.HttpListeners.FirstOrDefault(l => l.Name == originalName);
+                if (listener is null) return false;
+                if (values.TryGetValue("Protocol", out var lProto))
+                    listener.Protocol = lProto.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Host Name", out var lHost))
+                    listener.HostName = lHost;
+                if (values.TryGetValue("Require SNI", out var lSni))
+                    listener.RequireServerNameIndication = lSni.Equals("True", StringComparison.OrdinalIgnoreCase);
+                if (values.TryGetValue("Frontend IP", out var lFip) && !string.IsNullOrWhiteSpace(lFip))
+                {
+                    var fip = _data.FrontendIPConfigurations.FirstOrDefault(f => f.Name == lFip);
+                    if (fip is not null) listener.FrontendIPConfigurationId = fip.Id;
+                }
+                if (values.TryGetValue("Frontend Port", out var lFp) && !string.IsNullOrWhiteSpace(lFp))
+                {
+                    var fp = _data.FrontendPorts.FirstOrDefault(f => f.Name == lFp);
+                    if (fp is not null) listener.FrontendPortId = fp.Id;
+                }
+                if (values.TryGetValue("SSL Certificate", out var lSsl) && !string.IsNullOrWhiteSpace(lSsl))
+                {
+                    var cert = _data.SslCertificates.FirstOrDefault(c => c.Name == lSsl);
+                    if (cert is not null) listener.SslCertificateId = cert.Id;
+                }
+                return true;
+
+            case AppGwSection.HealthProbes:
+                var probe = _data.Probes.FirstOrDefault(p => p.Name == originalName);
+                if (probe is null) return false;
+                if (values.TryGetValue("Protocol", out var pProto))
+                    probe.Protocol = pProto.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Host", out var pHost))
+                    probe.Host = pHost;
+                if (values.TryGetValue("Path", out var pPath))
+                    probe.Path = pPath;
+                if (values.TryGetValue("Interval", out var intStr) && int.TryParse(intStr.TrimEnd('s'), out var interval))
+                    probe.IntervalInSeconds = interval;
+                if (values.TryGetValue("Timeout", out var toStr) && int.TryParse(toStr.TrimEnd('s'), out var to))
+                    probe.TimeoutInSeconds = to;
+                if (values.TryGetValue("Unhealthy Threshold", out var thStr) && int.TryParse(thStr, out var threshold))
+                    probe.UnhealthyThreshold = threshold;
+                if (values.TryGetValue("Pick Host From Backend", out var pickHost))
+                    probe.PickHostNameFromBackendHttpSettings = pickHost.Equals("True", StringComparison.OrdinalIgnoreCase);
+                return true;
+
+            case AppGwSection.RoutingRules:
+                var rule = _data.RequestRoutingRules.FirstOrDefault(r => r.Name == originalName);
+                if (rule is null) return false;
+                if (values.TryGetValue("Rule Type", out var rType))
+                    rule.RuleType = rType.Equals("PathBasedRouting", StringComparison.OrdinalIgnoreCase)
+                        ? ApplicationGatewayRequestRoutingRuleType.PathBasedRouting
+                        : ApplicationGatewayRequestRoutingRuleType.Basic;
+                if (values.TryGetValue("Priority", out var rPri) && int.TryParse(rPri, out var priVal))
+                    rule.Priority = priVal;
+                if (values.TryGetValue("Listener", out var rListener) && !string.IsNullOrWhiteSpace(rListener))
+                {
+                    var hl = _data.HttpListeners.FirstOrDefault(l => l.Name == rListener);
+                    if (hl is not null) rule.HttpListenerId = hl.Id;
+                }
+                if (values.TryGetValue("Backend Pool", out var rPool) && !string.IsNullOrWhiteSpace(rPool))
+                {
+                    var bp = _data.BackendAddressPools.FirstOrDefault(p => p.Name == rPool);
+                    if (bp is not null) rule.BackendAddressPoolId = bp.Id;
+                }
+                if (values.TryGetValue("Backend Settings", out var rSettings) && !string.IsNullOrWhiteSpace(rSettings))
+                {
+                    var bs = _data.BackendHttpSettingsCollection.FirstOrDefault(s => s.Name == rSettings);
+                    if (bs is not null) rule.BackendHttpSettingsId = bs.Id;
+                }
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public bool AddItem(AppGwSection section, Dictionary<string, string> values)
+    {
+        if (_data is null) return false;
+        var name = values.GetValueOrDefault("Name") ?? "";
+        if (string.IsNullOrWhiteSpace(name)) return false;
+
+        switch (section)
+        {
+            case AppGwSection.BackendPools:
+                var pool = new ApplicationGatewayBackendAddressPool { Name = name };
+                foreach (var addr in (values.GetValueOrDefault("Addresses") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    var ba = new ApplicationGatewayBackendAddress();
+                    if (System.Net.IPAddress.TryParse(addr, out _)) ba.IPAddress = addr; else ba.Fqdn = addr;
+                    pool.BackendAddresses.Add(ba);
+                }
+                _data.BackendAddressPools.Add(pool);
+                return true;
+
+            case AppGwSection.BackendSettings:
+                var s = new ApplicationGatewayBackendHttpSettings { Name = name };
+                if (values.TryGetValue("Protocol", out var sp)) s.Protocol = sp.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Port", out var sPort) && int.TryParse(sPort, out var spInt)) s.Port = spInt;
+                if (values.TryGetValue("Cookie Affinity", out var sc)) s.CookieBasedAffinity = sc.Equals("Enabled", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayCookieBasedAffinity.Enabled : ApplicationGatewayCookieBasedAffinity.Disabled;
+                if (values.TryGetValue("Request Timeout", out var st) && int.TryParse(st.TrimEnd('s'), out var stInt)) s.RequestTimeoutInSeconds = stInt;
+                if (values.TryGetValue("Host Name", out var sh)) s.HostName = sh;
+                _data.BackendHttpSettingsCollection.Add(s);
+                return true;
+
+            case AppGwSection.HealthProbes:
+                var p = new ApplicationGatewayProbe { Name = name };
+                if (values.TryGetValue("Protocol", out var pp)) p.Protocol = pp.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Host", out var ph)) p.Host = ph;
+                if (values.TryGetValue("Path", out var ppa)) p.Path = ppa;
+                if (values.TryGetValue("Interval", out var pi) && int.TryParse(pi.TrimEnd('s'), out var piInt)) p.IntervalInSeconds = piInt;
+                if (values.TryGetValue("Timeout", out var pt) && int.TryParse(pt.TrimEnd('s'), out var ptInt)) p.TimeoutInSeconds = ptInt;
+                if (values.TryGetValue("Unhealthy Threshold", out var pu) && int.TryParse(pu, out var puInt)) p.UnhealthyThreshold = puInt;
+                _data.Probes.Add(p);
+                return true;
+
+            case AppGwSection.FrontendIP: // Actually frontend ports via the "Add" in FrontendIP section
+                var fp = new ApplicationGatewayFrontendPort { Name = name };
+                if (values.TryGetValue("Port", out var fpPort) && int.TryParse(fpPort, out var fpInt)) fp.Port = fpInt;
+                _data.FrontendPorts.Add(fp);
+                return true;
+
+            case AppGwSection.Listeners:
+                var newListener = new ApplicationGatewayHttpListener { Name = name };
+                if (values.TryGetValue("Protocol", out var lp2))
+                    newListener.Protocol = lp2.Equals("Https", StringComparison.OrdinalIgnoreCase) ? ApplicationGatewayProtocol.Https : ApplicationGatewayProtocol.Http;
+                if (values.TryGetValue("Host Name", out var lh2))
+                    newListener.HostName = lh2;
+                if (values.TryGetValue("Require SNI", out var lSni2))
+                    newListener.RequireServerNameIndication = lSni2.Equals("True", StringComparison.OrdinalIgnoreCase);
+                if (values.TryGetValue("Frontend IP", out var lFip2) && !string.IsNullOrWhiteSpace(lFip2))
+                {
+                    var fip = _data.FrontendIPConfigurations.FirstOrDefault(f => f.Name == lFip2);
+                    if (fip is not null) newListener.FrontendIPConfigurationId = fip.Id;
+                }
+                if (values.TryGetValue("Frontend Port", out var lFp2) && !string.IsNullOrWhiteSpace(lFp2))
+                {
+                    var fp2 = _data.FrontendPorts.FirstOrDefault(f => f.Name == lFp2);
+                    if (fp2 is not null) newListener.FrontendPortId = fp2.Id;
+                }
+                if (values.TryGetValue("SSL Certificate", out var lSsl2) && !string.IsNullOrWhiteSpace(lSsl2))
+                {
+                    var cert = _data.SslCertificates.FirstOrDefault(c => c.Name == lSsl2);
+                    if (cert is not null) newListener.SslCertificateId = cert.Id;
+                }
+                _data.HttpListeners.Add(newListener);
+                return true;
+
+            case AppGwSection.RoutingRules:
+                var rr = new ApplicationGatewayRequestRoutingRule { Name = name };
+                if (values.TryGetValue("Rule Type", out var rt2))
+                    rr.RuleType = rt2.Equals("PathBasedRouting", StringComparison.OrdinalIgnoreCase)
+                        ? ApplicationGatewayRequestRoutingRuleType.PathBasedRouting
+                        : ApplicationGatewayRequestRoutingRuleType.Basic;
+                if (values.TryGetValue("Priority", out var rp2) && int.TryParse(rp2, out var rpInt2))
+                    rr.Priority = rpInt2;
+                if (values.TryGetValue("Listener", out var rL2) && !string.IsNullOrWhiteSpace(rL2))
+                {
+                    var hl = _data.HttpListeners.FirstOrDefault(l => l.Name == rL2);
+                    if (hl is not null) rr.HttpListenerId = hl.Id;
+                }
+                if (values.TryGetValue("Backend Pool", out var rBp2) && !string.IsNullOrWhiteSpace(rBp2))
+                {
+                    var bp = _data.BackendAddressPools.FirstOrDefault(p => p.Name == rBp2);
+                    if (bp is not null) rr.BackendAddressPoolId = bp.Id;
+                }
+                if (values.TryGetValue("Backend Settings", out var rBs2) && !string.IsNullOrWhiteSpace(rBs2))
+                {
+                    var bs = _data.BackendHttpSettingsCollection.FirstOrDefault(s => s.Name == rBs2);
+                    if (bs is not null) rr.BackendHttpSettingsId = bs.Id;
+                }
+                _data.RequestRoutingRules.Add(rr);
+                return true;
+
+            default:
+                return false;
+        }
     }
 }
