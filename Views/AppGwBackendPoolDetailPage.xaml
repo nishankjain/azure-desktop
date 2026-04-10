@@ -14,20 +14,27 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" Margin="0,0,0,8" ItemClicked="Breadcrumb_ItemClicked">
-                <BreadcrumbBar.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <TextBlock Text="{x:Bind}" FontSize="24" />
-                    </DataTemplate>
-                </BreadcrumbBar.ItemTemplate>
-            </BreadcrumbBar>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
+                <Button x:Name="EllipsisButton" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Padding="4,0,12,0" VerticalAlignment="Center" FontSize="28" FontWeight="SemiBold" Content="..." />
+                <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
+                    <BreadcrumbBar.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
+                        </DataTemplate>
+                    </BreadcrumbBar.ItemTemplate>
+                </BreadcrumbBar>
+            </StackPanel>
 
-        <Grid Grid.Row="1">
+        <TextBlock x:Name="TitleText" Grid.Row="1" FontSize="20" FontWeight="SemiBold" Margin="0,8,0,8" />
+
+        <Grid Grid.Row="2">
             <StackPanel x:Name="StatusPanel" Orientation="Horizontal" Spacing="8" Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
                 <ProgressRing x:Name="StatusSpinner" Width="14" Height="14" IsActive="True" />
                 <FontIcon x:Name="StatusIcon" FontSize="14" Visibility="Collapsed" />
@@ -35,20 +42,20 @@
             </StackPanel>
         </Grid>
 
-        <StackPanel Grid.Row="2" Margin="0,8,0,0" Orientation="Horizontal" Spacing="8">
+        <StackPanel Grid.Row="3" Margin="0,8,0,0" Orientation="Horizontal" Spacing="8">
             <Button Click="Save_Click" Content="Save Changes" Style="{ThemeResource AccentButtonStyle}" />
             <Button Click="AddTarget_Click" Content="Add Target" />
         </StackPanel>
 
         <!-- Targets Header + Search -->
-        <StackPanel Grid.Row="3" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
+        <StackPanel Grid.Row="4" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
             <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Text="Backend Targets" />
             <TextBlock x:Name="TargetCountText" FontSize="12" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             <TextBox x:Name="TargetSearchBox" Width="250" PlaceholderText="Filter targets..." TextChanged="TargetSearch_TextChanged" />
         </StackPanel>
 
         <!-- Target column headers -->
-        <Grid Grid.Row="4" Margin="0,8,0,4" Padding="8,4,8,4">
+        <Grid Grid.Row="5" Margin="0,8,0,4" Padding="8,4,8,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="*" />
@@ -60,10 +67,10 @@
         </Grid>
 
         <!-- Virtualized target list -->
-        <ListView x:Name="TargetsList" Grid.Row="5" SelectionMode="None" />
+        <ListView x:Name="TargetsList" Grid.Row="6" SelectionMode="None" />
 
         <!-- Associated Rules Section -->
-        <TextBlock Grid.Row="6" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,4" Text="Associated Routing Rules" />
-        <StackPanel x:Name="RulesArea" Grid.Row="7" Spacing="4" Margin="0,0,0,16" />
+        <TextBlock Grid.Row="7" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,4" Text="Associated Routing Rules" />
+        <StackPanel x:Name="RulesArea" Grid.Row="8" Spacing="4" Margin="0,0,0,16" />
     </Grid>
 </Page>

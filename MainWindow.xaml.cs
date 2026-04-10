@@ -359,7 +359,7 @@ public sealed partial class MainWindow : Window
         if (_activeSubscription is not null)
         {
             crumbs.Add("Subscriptions");
-            crumbs.Add(_activeSubscription.Name);
+            crumbs.Add("Subscription");
         }
 
         if (scope == "sub")
@@ -369,7 +369,7 @@ public sealed partial class MainWindow : Window
 
         if (_activeNavContext?.ResourceGroupName is not null)
         {
-            crumbs.Add(_activeNavContext.ResourceGroupName);
+            crumbs.Add("Resource Group");
         }
 
         if (scope == "rg")
@@ -379,7 +379,7 @@ public sealed partial class MainWindow : Window
 
         if (_activeNavContext?.Resource is not null)
         {
-            crumbs.Add(_activeNavContext.Resource.Name);
+            crumbs.Add(_activeNavContext.Resource.SingularType);
         }
 
         return crumbs;

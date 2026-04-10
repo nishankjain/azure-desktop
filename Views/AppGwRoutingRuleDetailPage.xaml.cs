@@ -1,5 +1,5 @@
-using System.Collections.ObjectModel;
 using Azure.ResourceManager.Network.Models;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,8 +10,8 @@ namespace AzureDesktop.Views;
 public sealed partial class AppGwRoutingRuleDetailPage : Page
 {
     public AppGwViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private string _ruleName = "";
     private DispatcherTimer? _autoDismissTimer;
@@ -104,15 +104,16 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         {
             _navCtx = ctx;
             _ruleName = ruleName;
+            TitleText.Text = ruleName;
 
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add(ctx.ResourceGroupName ?? "");
-            BreadcrumbItems.Add(ctx.Resource?.Name ?? "");
-            BreadcrumbItems.Add("Routing Rules");
-            BreadcrumbItems.Add(ruleName);
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
+            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx! with { Resource = null }));
+            _breadcrumbHelper.Add(ctx.Resource?.SingularType ?? "Resource", () => Frame.Navigate(typeof(ResourceDetailPage), _navCtx));
+            _breadcrumbHelper.Add("Routing Rules", () => Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.RoutingRules)));
+            _breadcrumbHelper.Add("Routing Rule", () => { });
+            _breadcrumbHelper.Apply();
 
             RenderForm();
         }
@@ -120,15 +121,7 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (_navCtx is null) return;
-        switch (args.Index)
-        {
-            case 0: Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); break;
-            case 1: Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription); break;
-            case 2: Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null }); break;
-            case 3: Frame.Navigate(typeof(ResourceDetailPage), _navCtx); break;
-            case 4: Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.RoutingRules)); break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void RenderForm()

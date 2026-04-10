@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +9,8 @@ namespace AzureDesktop.Views;
 public sealed partial class ResourcesPage : Page
 {
     public ResourcesViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private bool _suppressFilterEvents;
 
@@ -27,12 +27,12 @@ public sealed partial class ResourcesPage : Page
         if (e.Parameter is NavigationContext ctx && ctx.ResourceGroupName is not null)
         {
             _navCtx = ctx;
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add(ctx.ResourceGroupName);
-            BreadcrumbItems.Add("Resources");
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
+            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx));
+            _breadcrumbHelper.Add("Resources", () => { });
+            _breadcrumbHelper.Apply();
 
             await ViewModel.LoadForResourceGroupAsync(
                 ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, default);
@@ -41,24 +41,7 @@ public sealed partial class ResourcesPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (_navCtx is null)
-        {
-            return;
-        }
-
-        switch (args.Index)
-        {
-            case 0:
-                Frame.BackStack.Clear();
-                Frame.Navigate(typeof(SubscriptionsPage));
-                break;
-            case 1:
-                Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
-                break;
-            case 2:
-                Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx);
-                break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void SortByName_Click(object sender, RoutedEventArgs e)

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.Services;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
@@ -9,7 +9,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class ResourceProviderDetailPage : Page
 {
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
+    private BreadcrumbHelper? _breadcrumbHelper;
 
     private ResourceProviderEntry? _entry;
     private SubscriptionItem? _subItem;
@@ -46,12 +46,12 @@ public sealed partial class ResourceProviderDetailPage : Page
             _subItem = sub;
             _allResourceTypes = entry.ResourceTypes;
 
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(sub.Name);
-            BreadcrumbItems.Add("Resource Providers");
-            BreadcrumbItems.Add(entry.Namespace);
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
+            _breadcrumbHelper.Add("Resource Providers", () => Frame.Navigate(typeof(ResourceProvidersPage), _subItem));
+            _breadcrumbHelper.Add("Resource Provider", () => { });
+            _breadcrumbHelper.Apply();
 
             Bindings.Update();
         }
@@ -59,19 +59,7 @@ public sealed partial class ResourceProviderDetailPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        switch (args.Index)
-        {
-            case 0:
-                Frame.BackStack.Clear();
-                Frame.Navigate(typeof(SubscriptionsPage));
-                break;
-            case 1 when _subItem is not null:
-                Frame.Navigate(typeof(SubscriptionDetailPage), _subItem);
-                break;
-            case 2 when _subItem is not null:
-                Frame.Navigate(typeof(ResourceProvidersPage), _subItem);
-                break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void ResourceTypeSearch_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +9,8 @@ namespace AzureDesktop.Views;
 public sealed partial class FeaturesPage : Page
 {
     public FeaturesViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private SubscriptionItem? _subItem;
 
     public FeaturesPage()
@@ -26,11 +26,11 @@ public sealed partial class FeaturesPage : Page
         if (e.Parameter is SubscriptionItem sub)
         {
             _subItem = sub;
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(sub.Name);
-            BreadcrumbItems.Add("Preview Features");
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
+            _breadcrumbHelper.Add("Preview Features", () => { });
+            _breadcrumbHelper.Apply();
 
             await ViewModel.LoadProvidersAsync(sub.Id);
         }
@@ -38,16 +38,7 @@ public sealed partial class FeaturesPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        switch (args.Index)
-        {
-            case 0:
-                Frame.BackStack.Clear();
-                Frame.Navigate(typeof(SubscriptionsPage));
-                break;
-            case 1 when _subItem is not null:
-                Frame.Navigate(typeof(SubscriptionDetailPage), _subItem);
-                break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private async void Provider_ItemClick(object sender, ItemClickEventArgs e)

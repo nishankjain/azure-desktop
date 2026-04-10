@@ -16,13 +16,16 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" Margin="0,0,0,8" ItemClicked="Breadcrumb_ItemClicked">
-                <BreadcrumbBar.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <TextBlock Text="{x:Bind}" FontSize="24" />
-                    </DataTemplate>
-                </BreadcrumbBar.ItemTemplate>
-            </BreadcrumbBar>
+        <StackPanel Grid.Row="0" Margin="0,0,0,8" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
+                <Button x:Name="EllipsisButton" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Padding="4,0,12,0" VerticalAlignment="Center" FontSize="28" FontWeight="SemiBold" Content="..." />
+                <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
+                    <BreadcrumbBar.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
+                        </DataTemplate>
+                    </BreadcrumbBar.ItemTemplate>
+                </BreadcrumbBar>
+            </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,0" Spacing="4">
             <InfoBar IsClosable="True" IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" Severity="Success" />

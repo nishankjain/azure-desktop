@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,9 +10,9 @@ namespace AzureDesktop.Views;
 public sealed partial class AppGwSectionPage : Page
 {
     public AppGwViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
     public string SectionTitle { get; private set; } = "";
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private AppGwSection _section;
 
@@ -33,13 +34,13 @@ public sealed partial class AppGwSectionPage : Page
             ClearNotifications();
             
 
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add(ctx.ResourceGroupName ?? "");
-            BreadcrumbItems.Add(ctx.Resource?.Name ?? "");
-            BreadcrumbItems.Add(SectionTitle);
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
+            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx! with { Resource = null }));
+            _breadcrumbHelper.Add(ctx.Resource?.SingularType ?? "Resource", () => Frame.Navigate(typeof(ResourceDetailPage), _navCtx));
+            _breadcrumbHelper.Add(SectionTitle, () => { });
+            _breadcrumbHelper.Apply();
 
             // Data should already be loaded by the singleton ViewModel
             RenderSection();
@@ -48,24 +49,7 @@ public sealed partial class AppGwSectionPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (_navCtx is null) return;
-
-        switch (args.Index)
-        {
-            case 0:
-                Frame.BackStack.Clear();
-                Frame.Navigate(typeof(SubscriptionsPage));
-                break;
-            case 1:
-                Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
-                break;
-            case 2:
-                Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null });
-                break;
-            case 3:
-                Frame.Navigate(typeof(ResourceDetailPage), _navCtx);
-                break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private ObservableCollection<Dictionary<string, string>>? _currentCollection;

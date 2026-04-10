@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +9,8 @@ namespace AzureDesktop.Views;
 public sealed partial class FeatureDetailPage : Page
 {
     public FeatureDetailViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private SubscriptionItem? _subItem;
 
     public FeatureDetailPage()
@@ -28,30 +28,18 @@ public sealed partial class FeatureDetailPage : Page
             _subItem = sub;
             ViewModel.Load(entry, sub.Id);
 
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(sub.Name);
-            BreadcrumbItems.Add("Preview Features");
-            BreadcrumbItems.Add(entry.FeatureName);
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
+            _breadcrumbHelper.Add("Preview Features", () => Frame.Navigate(typeof(FeaturesPage), _subItem));
+            _breadcrumbHelper.Add("Feature", () => { });
+            _breadcrumbHelper.Apply();
         }
     }
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        switch (args.Index)
-        {
-            case 0:
-                Frame.BackStack.Clear();
-                Frame.Navigate(typeof(SubscriptionsPage));
-                break;
-            case 1 when _subItem is not null:
-                Frame.Navigate(typeof(SubscriptionDetailPage), _subItem);
-                break;
-            case 2 when _subItem is not null:
-                Frame.Navigate(typeof(FeaturesPage), _subItem);
-                break;
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private async void ToggleRegistration_Click(object sender, RoutedEventArgs e)

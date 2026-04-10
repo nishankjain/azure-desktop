@@ -14,6 +14,7 @@ public partial class ResourceItem(string name, string type, string location, str
     public string Location { get; } = location;
     public string ResourceId { get; } = resourceId;
     public string DisplayType { get; } = HumanizeResourceType(type);
+    public string SingularType { get; } = Singularize(HumanizeResourceType(type));
     public string IconPath { get; } = ResourceIconResolver.GetIconPath(type);
 
     private static string HumanizeResourceType(string type)
@@ -35,6 +36,26 @@ public partial class ResourceItem(string name, string type, string location, str
         }
 
         return chars.ToString();
+    }
+
+    private static string Singularize(string name)
+    {
+        if (name.EndsWith("ies", StringComparison.Ordinal))
+        {
+            return string.Concat(name.AsSpan(0, name.Length - 3), "y");
+        }
+
+        if (name.EndsWith("sses", StringComparison.Ordinal) || name.EndsWith("uses", StringComparison.Ordinal))
+        {
+            return name[..^2];
+        }
+
+        if (name.EndsWith('s') && !name.EndsWith("ss", StringComparison.Ordinal))
+        {
+            return name[..^1];
+        }
+
+        return name;
     }
 }
 

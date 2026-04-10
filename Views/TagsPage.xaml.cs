@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,9 +10,9 @@ namespace AzureDesktop.Views;
 public sealed partial class TagsPage : Page
 {
     public TagManagerViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
     private object? _parentNavParam;
+    private BreadcrumbHelper? _breadcrumbHelper;
 
     public TagsPage()
     {
@@ -26,14 +27,15 @@ public sealed partial class TagsPage : Page
         if (e.Parameter is (string resourceId, List<string> breadcrumbs, object navParam))
         {
             _parentNavParam = navParam;
-            BreadcrumbItems.Clear();
+
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
             foreach (var b in breadcrumbs)
             {
-                BreadcrumbItems.Add(b);
+                _breadcrumbHelper.Add(b, NavigateToParent);
             }
 
-            BreadcrumbItems.Add("Tags");
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper.Add("Tags", () => { });
+            _breadcrumbHelper.Apply();
 
             await ViewModel.LoadTagsAsync(resourceId);
         }
@@ -41,7 +43,7 @@ public sealed partial class TagsPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        NavigateToParent();
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void NavigateToParent()

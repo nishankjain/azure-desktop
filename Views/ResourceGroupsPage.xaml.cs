@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +9,8 @@ namespace AzureDesktop.Views;
 public sealed partial class ResourceGroupsPage : Page
 {
     public ResourceGroupsViewModel ViewModel { get; }
-    public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
+    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private bool _suppressFilterEvents;
 
@@ -27,11 +27,11 @@ public sealed partial class ResourceGroupsPage : Page
         if (e.Parameter is NavigationContext ctx)
         {
             _navCtx = ctx;
-            BreadcrumbItems.Clear();
-            BreadcrumbItems.Add("Subscriptions");
-            BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add("Resource Groups");
-            Breadcrumb.ItemsSource = BreadcrumbItems;
+            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
+            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
+            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
+            _breadcrumbHelper.Add("Resource Groups", () => { });
+            _breadcrumbHelper.Apply();
 
             var subItem = new SubscriptionItem(ctx.SubscriptionId, ctx.SubscriptionName, "", "");
             await ViewModel.LoadForSubscriptionAsync(subItem, default);
@@ -40,15 +40,7 @@ public sealed partial class ResourceGroupsPage : Page
 
     private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
-        if (args.Index == 0)
-        {
-            Frame.BackStack.Clear();
-            Frame.Navigate(typeof(SubscriptionsPage));
-        }
-        else if (args.Index == 1 && _navCtx is not null)
-        {
-            Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
-        }
+        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void ResourceGroupList_ItemClick(object sender, ItemClickEventArgs e)
