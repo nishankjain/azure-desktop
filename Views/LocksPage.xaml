@@ -32,7 +32,7 @@
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
         </StackPanel>
 
-        <Border Grid.Row="2" Margin="0,12,0,0" Padding="12" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="6">
+        <Border Grid.Row="2" Margin="0,12,0,0" Padding="12" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" CornerRadius="4">
             <StackPanel Spacing="8">
                 <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Add a new lock (scoped to this resource)" />
                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -58,7 +58,7 @@
             </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:LockEntry">
-                    <Border Padding="12,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
+                    <Border Padding="12,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                         <StackPanel>
                             <Grid Visibility="{x:Bind IsEditing, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">
                                 <Grid Visibility="{x:Bind IsConfirmingDelete, Mode=OneWay, Converter={StaticResource InverseBoolToVisibilityConverter}}">

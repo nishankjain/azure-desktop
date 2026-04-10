@@ -41,7 +41,7 @@
         <InfoBar Grid.Row="2" Margin="0,4,0,0" IsClosable="False" IsOpen="{x:Bind ViewModel.SearchError, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SearchError, Mode=OneWay}" Severity="Warning" />
 
         <!-- Search result tile -->
-        <Border Grid.Row="3" Margin="0,4,0,0" Padding="16,12" Visibility="{x:Bind ViewModel.SearchResult, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource SystemAccentColorLight2}" BorderThickness="2" CornerRadius="6">
+        <Border Grid.Row="3" Margin="0,4,0,0" Padding="16,12" Visibility="{x:Bind ViewModel.SearchResult, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource SystemAccentColorLight2}" BorderThickness="2" CornerRadius="4">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

@@ -189,7 +189,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
                     Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
                     BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
                     BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(6),
+                    CornerRadius = new CornerRadius(4),
                     Margin = new Thickness(0, 2, 0, 2),
                 };
                 border.PointerPressed += (s, _) =>

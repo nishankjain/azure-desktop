@@ -40,7 +40,7 @@
                                 x:Name="Root"
                                 Padding="{TemplateBinding Padding}"
                                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="8">
+                                CornerRadius="4">
                                 <Border.BackgroundTransition>
                                     <BrushTransition Duration="0:0:0.2" />
                                 </Border.BackgroundTransition>

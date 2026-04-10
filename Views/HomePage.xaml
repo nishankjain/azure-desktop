@@ -61,7 +61,7 @@
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         Click="Subscriptions_Click"
-                        CornerRadius="8">
+                        CornerRadius="4">
                         <StackPanel Spacing="8">
                             <FontIcon FontSize="28" Glyph="&#xE8CB;" />
                             <TextBlock FontWeight="SemiBold" Text="Subscriptions" />

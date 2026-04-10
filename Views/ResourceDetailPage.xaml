@@ -31,7 +31,7 @@
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
 
             <TextBlock FontSize="16" FontWeight="SemiBold" Text="Overview" />
-            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+            <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                 <StackPanel Spacing="16">
                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                         <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Name" />
@@ -58,7 +58,7 @@
             <!-- App Gateway sections -->
             <StackPanel Spacing="24" Visibility="{x:Bind ViewModel.IsAppGateway, Mode=OneWay}">
                 <TextBlock FontSize="16" FontWeight="SemiBold" Text="SKU" />
-                <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                     <StackPanel Spacing="16">
                         <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                             <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SKU Name" />

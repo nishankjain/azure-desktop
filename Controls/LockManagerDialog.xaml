@@ -45,7 +45,7 @@
         <Border
             Padding="12"
             Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-            CornerRadius="6">
+            CornerRadius="4">
             <StackPanel Spacing="8">
                 <TextBlock
                     FontSize="12"
@@ -92,7 +92,7 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
-                        CornerRadius="6">
+                        CornerRadius="4">
                         <StackPanel>
 
                         <!-- Normal view (not editing, not confirming delete) -->

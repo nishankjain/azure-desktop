@@ -58,7 +58,7 @@
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                CornerRadius="8">
+                CornerRadius="4">
                 <StackPanel Spacing="16">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -140,7 +140,7 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
-                        CornerRadius="8">
+                        CornerRadius="4">
                         <StackPanel Spacing="8">
                             <TextBlock FontSize="13" FontWeight="SemiBold" Text="Capabilities" />
                             <ListView
@@ -163,7 +163,7 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
-                        CornerRadius="8">
+                        CornerRadius="4">
                         <StackPanel Spacing="8">
                             <TextBlock FontSize="13" FontWeight="SemiBold" Text="API Versions" />
                             <ListView
@@ -186,7 +186,7 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         BorderThickness="1"
-                        CornerRadius="8">
+                        CornerRadius="4">
                         <StackPanel Spacing="8">
                             <TextBlock FontSize="13" FontWeight="SemiBold" Text="Locations" />
                             <ListView
