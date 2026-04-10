@@ -104,7 +104,6 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         {
             _navCtx = ctx;
             _ruleName = ruleName;
-            TitleText.Text = ruleName;
 
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");

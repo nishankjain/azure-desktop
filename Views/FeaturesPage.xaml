@@ -14,16 +14,19 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" ItemClicked="Breadcrumb_ItemClicked" />
-
-        <TextBlock Grid.Row="1" Margin="0,8,0,0" FontSize="28" FontWeight="SemiBold" Text="Preview Features" />
+        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" Margin="0,0,0,8" ItemClicked="Breadcrumb_ItemClicked">
+                <BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontSize="24" />
+                    </DataTemplate>
+                </BreadcrumbBar.ItemTemplate>
+            </BreadcrumbBar>
 
         <!-- Unified search/filter bar -->
-        <StackPanel Grid.Row="2" Margin="0,12,0,0" Orientation="Horizontal" Spacing="8">
+        <StackPanel Grid.Row="1" Margin="0,4,0,0" Orientation="Horizontal" Spacing="8">
             <TextBox Width="220" PlaceholderText="Provider namespace" Text="{x:Bind ViewModel.ProviderFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <TextBox Width="220" PlaceholderText="Feature name" Text="{x:Bind ViewModel.FeatureFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Command="{x:Bind ViewModel.SearchCommand}" Content="Search" Style="{ThemeResource AccentButtonStyle}" />
@@ -32,10 +35,10 @@
         </StackPanel>
 
         <!-- Search error -->
-        <InfoBar Grid.Row="3" Margin="0,4,0,0" IsClosable="False" IsOpen="{x:Bind ViewModel.SearchError, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SearchError, Mode=OneWay}" Severity="Warning" />
+        <InfoBar Grid.Row="2" Margin="0,4,0,0" IsClosable="False" IsOpen="{x:Bind ViewModel.SearchError, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SearchError, Mode=OneWay}" Severity="Warning" />
 
         <!-- Search result tile -->
-        <Border Grid.Row="4" Margin="0,4,0,0" Padding="16,12" Visibility="{x:Bind ViewModel.SearchResult, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource SystemAccentColorLight2}" BorderThickness="2" CornerRadius="6">
+        <Border Grid.Row="3" Margin="0,4,0,0" Padding="16,12" Visibility="{x:Bind ViewModel.SearchResult, Mode=OneWay, Converter={StaticResource NullToVisibilityConverter}}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource SystemAccentColorLight2}" BorderThickness="2" CornerRadius="6">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -54,7 +57,7 @@
         </Border>
 
         <!-- Two-panel: RP list + features -->
-        <Grid Grid.Row="5" Margin="0,8,0,0">
+        <Grid Grid.Row="4" Margin="0,8,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="280" />
                 <ColumnDefinition Width="16" />

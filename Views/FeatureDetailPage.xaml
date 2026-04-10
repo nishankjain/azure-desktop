@@ -10,11 +10,13 @@
     <ScrollViewer>
         <StackPanel Padding="16,8,40,40" Spacing="24">
 
-            <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked" />
-
-            <StackPanel Spacing="4">
-                <TextBlock FontSize="28" FontWeight="SemiBold" Text="{x:Bind ViewModel.FeatureName, Mode=OneWay}" />
-            </StackPanel>
+            <BreadcrumbBar x:Name="Breadcrumb" Margin="0,0,0,16" ItemClicked="Breadcrumb_ItemClicked">
+                <BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontSize="24" />
+                    </DataTemplate>
+                </BreadcrumbBar.ItemTemplate>
+            </BreadcrumbBar>
 
             <!-- Register / Unregister -->
             <StackPanel Orientation="Horizontal" Spacing="8">

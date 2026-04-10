@@ -30,7 +30,6 @@ public sealed partial class AppGwSectionPage : Page
             _navCtx = ctx;
             _section = section;
             SectionTitle = SectionToTitle(section);
-            SectionTitleText.Text = SectionTitle;
             ClearNotifications();
             
 

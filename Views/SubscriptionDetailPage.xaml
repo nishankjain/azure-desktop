@@ -11,23 +11,19 @@
     <Grid Padding="16,8,40,40">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Breadcrumb -->
-        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" ItemClicked="Breadcrumb_ItemClicked" />
+        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" Margin="0,0,0,16" ItemClicked="Breadcrumb_ItemClicked">
+                <BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontSize="24" />
+                    </DataTemplate>
+                </BreadcrumbBar.ItemTemplate>
+            </BreadcrumbBar>
 
-        <!-- Header -->
-        <StackPanel Grid.Row="1" Margin="0,8,0,16">
-            <TextBlock
-                AutomationProperties.AutomationId="SubscriptionDetailName"
-                FontSize="28"
-                FontWeight="SemiBold"
-                Text="{x:Bind ViewModel.Subscription.Name, Mode=OneWay}" />
-        </StackPanel>
-
-        <Grid Grid.Row="2" ColumnSpacing="24">
+        <Grid Grid.Row="1" ColumnSpacing="24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="300" />
                 <ColumnDefinition Width="*" MinWidth="300" />

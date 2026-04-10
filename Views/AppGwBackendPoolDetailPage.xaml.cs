@@ -34,7 +34,6 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         {
             _navCtx = ctx;
             _poolName = poolName;
-            TitleText.Text = poolName;
 
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");

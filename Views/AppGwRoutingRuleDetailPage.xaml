@@ -15,10 +15,15 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" FontSize="14" ItemClicked="Breadcrumb_ItemClicked" />
+        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" Margin="0,0,0,8" ItemClicked="Breadcrumb_ItemClicked">
+                <BreadcrumbBar.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontSize="24" />
+                    </DataTemplate>
+                </BreadcrumbBar.ItemTemplate>
+            </BreadcrumbBar>
 
-        <Grid Grid.Row="1" Margin="0,8,0,0">
-            <TextBlock x:Name="TitleText" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Left" />
+        <Grid Grid.Row="1">
             <StackPanel x:Name="StatusPanel" Orientation="Horizontal" Spacing="8" Padding="12,6" HorizontalAlignment="Right" VerticalAlignment="Center" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
                 <ProgressRing x:Name="StatusSpinner" Width="14" Height="14" IsActive="True" />
                 <FontIcon x:Name="StatusIcon" FontSize="14" Visibility="Collapsed" />
