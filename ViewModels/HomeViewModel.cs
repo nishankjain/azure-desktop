@@ -23,6 +23,32 @@ public partial class HomeViewModel(IAzureAuthService authService) : ObservableOb
         ? "You are signed in. Use the navigation menu to browse your Azure resources."
         : "Sign in with your Azure account to get started.";
 
+    public async Task TryRestoreAsync()
+    {
+        if (IsAuthenticated)
+        {
+            return;
+        }
+
+        IsSigningIn = true;
+
+        try
+        {
+            if (await authService.TryRestoreSessionAsync())
+            {
+                IsAuthenticated = true;
+            }
+        }
+        catch
+        {
+            // Silent restore failed — user will need to sign in manually
+        }
+        finally
+        {
+            IsSigningIn = false;
+        }
+    }
+
     [RelayCommand]
     private async Task ToggleSignInAsync(CancellationToken cancellationToken)
     {
