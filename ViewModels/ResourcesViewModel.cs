@@ -11,11 +11,34 @@ public partial class ResourceItem(string name, string type, string location, str
     public string Type { get; } = type;
     public string Location { get; } = location;
     public string ResourceId { get; } = resourceId;
+    public string DisplayType { get; } = HumanizeResourceType(type);
+
+    private static string HumanizeResourceType(string type)
+    {
+        // Remove namespace (e.g. "Microsoft.Network/applicationGateways" -> "applicationGateways")
+        var slashIndex = type.LastIndexOf('/');
+        var shortName = slashIndex >= 0 ? type[(slashIndex + 1)..] : type;
+
+        // Split camelCase into words and capitalize
+        var chars = new System.Text.StringBuilder(shortName.Length + 8);
+        for (var i = 0; i < shortName.Length; i++)
+        {
+            if (i > 0 && char.IsUpper(shortName[i]) && !char.IsUpper(shortName[i - 1]))
+            {
+                chars.Append(' ');
+            }
+
+            chars.Append(i == 0 ? char.ToUpper(shortName[i]) : shortName[i]);
+        }
+
+        return chars.ToString();
+    }
 }
 
-public sealed class ResourceTypeGroup(string typeName, IReadOnlyList<ResourceItem> resources)
+public sealed class ResourceTypeGroup(string typeName, string displayName, IReadOnlyList<ResourceItem> resources)
 {
     public string TypeName { get; } = typeName;
+    public string DisplayName { get; } = displayName;
     public int Count { get; } = resources.Count;
     public IReadOnlyList<ResourceItem> Resources { get; } = resources;
 }
@@ -52,6 +75,8 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
     [NotifyPropertyChangedFor(nameof(GroupedResources))]
     [NotifyPropertyChangedFor(nameof(SortIndicator))]
     public partial bool SortAscending { get; set; } = true;
+
+    private readonly Dictionary<string, string> _typeDisplayToRaw = new(StringComparer.OrdinalIgnoreCase);
 
     public ObservableCollection<string> TypeFilters { get; } = [];
 
@@ -106,7 +131,15 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
             foreach (var t in types.OrderBy(t => t))
             {
-                TypeFilters.Add(t);
+                TypeFilters.Add(new ResourceItem(string.Empty, t, string.Empty, string.Empty).DisplayType);
+            }
+
+            // Build mapping for filter lookup
+            _typeDisplayToRaw.Clear();
+            foreach (var t in types)
+            {
+                var display = new ResourceItem(string.Empty, t, string.Empty, string.Empty).DisplayType;
+                _typeDisplayToRaw[display] = t;
             }
 
             foreach (var l in locations.OrderBy(l => l))
@@ -172,7 +205,10 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
         if (SelectedTypes.Count > 0)
         {
-            result = result.Where(r => SelectedTypes.Contains(r.Type));
+            var rawTypes = SelectedTypes
+                .Select(dt => _typeDisplayToRaw.GetValueOrDefault(dt, dt))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            result = result.Where(r => rawTypes.Contains(r.Type));
         }
 
         if (SelectedLocations.Count > 0)
@@ -189,11 +225,11 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
         var groups = result
             .GroupBy(r => r.Type)
-            .Select(g => new ResourceTypeGroup(g.Key, g.ToList()));
+            .Select(g => new ResourceTypeGroup(g.Key, g.First().DisplayType, g.ToList()));
 
         groups = SortField == "Type"
-            ? (SortAscending ? groups.OrderBy(g => g.TypeName) : groups.OrderByDescending(g => g.TypeName))
-            : groups.OrderBy(g => g.TypeName);
+            ? (SortAscending ? groups.OrderBy(g => g.DisplayName) : groups.OrderByDescending(g => g.DisplayName))
+            : groups.OrderBy(g => g.DisplayName);
 
         return groups.ToList();
     }

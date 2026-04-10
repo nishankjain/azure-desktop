@@ -5,131 +5,205 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:AzureDesktop.ViewModels"
     mc:Ignorable="d">
 
-    <ScrollViewer>
-        <StackPanel Padding="16,8,40,40" Spacing="24">
+    <Grid Padding="16,8,40,40">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <!-- Breadcrumb -->
-            <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked" />
+        <!-- Breadcrumb -->
+        <BreadcrumbBar x:Name="Breadcrumb" Grid.Row="0" ItemClicked="Breadcrumb_ItemClicked" />
 
-            <!-- Header -->
-            <StackPanel Spacing="4">
-                <TextBlock
-                    AutomationProperties.AutomationId="SubscriptionDetailName"
-                    FontSize="28"
-                    FontWeight="SemiBold"
-                    Text="{x:Bind ViewModel.Subscription.Name, Mode=OneWay}" />
-                <TextBlock
-                    FontSize="12"
-                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    IsTextSelectionEnabled="True"
-                    Text="{x:Bind ViewModel.Subscription.Id, Mode=OneWay}" />
-            </StackPanel>
-
-            <!-- Overview Section -->
+        <!-- Header -->
+        <StackPanel Grid.Row="1" Margin="0,8,0,16">
             <TextBlock
-                FontSize="16"
+                AutomationProperties.AutomationId="SubscriptionDetailName"
+                FontSize="28"
                 FontWeight="SemiBold"
-                Text="Overview" />
-
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <StackPanel Spacing="16">
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Subscription ID" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.Id, Mode=OneWay}" />
-                    </Grid>
-
-                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="State" />
-                        <Border Grid.Column="1" Padding="8,4" HorizontalAlignment="Left" Background="{ThemeResource SystemAccentColorLight2}" CornerRadius="4">
-                            <TextBlock FontSize="12" Foreground="White" Text="{x:Bind ViewModel.Subscription.State, Mode=OneWay}" />
-                        </Border>
-                    </Grid>
-
-                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Tenant ID" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.TenantId, Mode=OneWay}" />
-                    </Grid>
-
-                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Authorization Source" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Subscription.AuthorizationSource, Mode=OneWay}" />
-                    </Grid>
-                </StackPanel>
-            </Border>
-
-            <!-- Policies Section -->
-            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Subscription Policies" />
-
-            <Border
-                Padding="20"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8">
-                <StackPanel Spacing="16">
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Spending Limit" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Subscription.SpendingLimit, Mode=OneWay}" />
-                    </Grid>
-
-                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Quota ID" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.QuotaId, Mode=OneWay}" />
-                    </Grid>
-
-                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location Placement" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.LocationPlacementId, Mode=OneWay}" />
-                    </Grid>
-                </StackPanel>
-            </Border>
+                Text="{x:Bind ViewModel.Subscription.Name, Mode=OneWay}" />
         </StackPanel>
-    </ScrollViewer>
+
+        <Grid Grid.Row="2" ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="300" />
+                <ColumnDefinition Width="*" MinWidth="300" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Overview + Policies -->
+            <ScrollViewer Grid.Column="0">
+                <StackPanel Grid.Column="0" Spacing="16">
+
+                    <!-- Overview Section -->
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Overview" />
+
+                    <Border
+                        Padding="20"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <StackPanel Spacing="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Subscription ID" />
+                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.Id, Mode=OneWay}" />
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="State" />
+                                <Border Grid.Column="1" Padding="8,4" HorizontalAlignment="Left" Background="{ThemeResource SystemAccentColorLight2}" CornerRadius="4">
+                                    <TextBlock FontSize="12" Foreground="White" Text="{x:Bind ViewModel.Subscription.State, Mode=OneWay}" />
+                                </Border>
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Tenant ID" />
+                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.TenantId, Mode=OneWay}" />
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Authorization Source" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Subscription.AuthorizationSource, Mode=OneWay}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Policies Section -->
+                    <TextBlock FontSize="16" FontWeight="SemiBold" Text="Subscription Policies" />
+
+                    <Border
+                        Padding="20"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8">
+                        <StackPanel Spacing="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Spending Limit" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Subscription.SpendingLimit, Mode=OneWay}" />
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Quota ID" />
+                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.QuotaId, Mode=OneWay}" />
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location Placement" />
+                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Subscription.LocationPlacementId, Mode=OneWay}" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Right: Resource Groups -->
+            <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                        <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Text="Resource Groups" />
+                        <ProgressRing Width="16" Height="16" IsActive="{x:Bind RgViewModel.IsLoading, Mode=OneWay}" Visibility="{x:Bind RgViewModel.IsLoading, Mode=OneWay}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Margin="0,16,0,0" Orientation="Horizontal" Spacing="8">
+                        <TextBox Width="200" PlaceholderText="Search by name..." Text="{x:Bind RgViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        <DropDownButton Content="Location">
+                            <DropDownButton.Flyout>
+                                <Flyout>
+                                    <ScrollViewer MaxHeight="300">
+                                        <ItemsRepeater x:Name="LocationFilterList" ItemsSource="{x:Bind RgViewModel.LocationFilters, Mode=OneWay}">
+                                            <ItemsRepeater.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <CheckBox Content="{x:Bind}" Checked="LocationFilter_Changed" Unchecked="LocationFilter_Changed" />
+                                                </DataTemplate>
+                                            </ItemsRepeater.ItemTemplate>
+                                        </ItemsRepeater>
+                                    </ScrollViewer>
+                                </Flyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                        <Button Click="ClearFilters_Click" Content="Clear" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Margin="0,8,0,8" Orientation="Horizontal" Spacing="8">
+                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Text="Sort:" />
+                        <Button x:Name="SortNameButton" Click="SortByName_Click" FontSize="12" Padding="8,4" Content="Name ↑" />
+                    </StackPanel>
+
+                    <InfoBar Grid.Row="3" IsClosable="False" IsOpen="{x:Bind RgViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind RgViewModel.ErrorMessage, Mode=OneWay}" Severity="Warning" />
+
+                    <ListView
+                        Grid.Row="4"
+                        Margin="0,4,0,0"
+                        IsItemClickEnabled="True"
+                        ItemClick="ResourceGroupList_ItemClick"
+                        ItemsSource="{x:Bind RgViewModel.FilteredResourceGroups, Mode=OneWay}"
+                        SelectionMode="None">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="Margin" Value="0,2" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ResourceGroupItem">
+                                <Border Padding="12,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Spacing="2">
+                                            <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
+                                        </StackPanel>
+                                        <FontIcon Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+        </Grid>
+    </Grid>
 </Page>

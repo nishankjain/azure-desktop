@@ -14,7 +14,6 @@
 
             <StackPanel Spacing="4">
                 <TextBlock FontSize="28" FontWeight="SemiBold" Text="{x:Bind ViewModel.FeatureName, Mode=OneWay}" />
-                <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.FullName, Mode=OneWay}" />
             </StackPanel>
 
             <!-- Register / Unregister -->

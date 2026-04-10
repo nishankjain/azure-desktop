@@ -30,7 +30,6 @@ public sealed partial class ResourcesPage : Page
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");
             BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add("Resource Groups");
             BreadcrumbItems.Add(ctx.ResourceGroupName);
             BreadcrumbItems.Add("Resources");
             Breadcrumb.ItemsSource = BreadcrumbItems;
@@ -57,10 +56,6 @@ public sealed partial class ResourcesPage : Page
                 Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
                 break;
             case 2:
-                var rgListCtx = new NavigationContext(_navCtx.Subscription);
-                Frame.Navigate(typeof(ResourceGroupsPage), rgListCtx);
-                break;
-            case 3:
                 Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx);
                 break;
         }
@@ -92,45 +87,50 @@ public sealed partial class ResourcesPage : Page
         SortLocationButton.Content = ViewModel.SortField == "Location" ? $"Location {arrow}" : "Location";
     }
 
-    private void TypeFilterList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void TypeFilter_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressFilterEvents)
-        {
-            return;
-        }
-
-        ViewModel.SelectedTypes.Clear();
-        foreach (string item in TypeFilterList.SelectedItems)
-        {
-            ViewModel.SelectedTypes.Add(item);
-        }
-
+        if (_suppressFilterEvents) return;
+        SyncCheckboxFilter(TypeFilterList, ViewModel.SelectedTypes);
         ViewModel.OnFilterChanged();
     }
 
-    private void LocationFilterList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void LocationFilter_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressFilterEvents)
-        {
-            return;
-        }
-
-        ViewModel.SelectedLocations.Clear();
-        foreach (string item in LocationFilterList.SelectedItems)
-        {
-            ViewModel.SelectedLocations.Add(item);
-        }
-
+        if (_suppressFilterEvents) return;
+        SyncCheckboxFilter(LocationFilterList, ViewModel.SelectedLocations);
         ViewModel.OnFilterChanged();
     }
 
     private void ClearFilters_Click(object sender, RoutedEventArgs e)
     {
         _suppressFilterEvents = true;
-        TypeFilterList.SelectedItems.Clear();
-        LocationFilterList.SelectedItems.Clear();
+        ClearCheckboxes(TypeFilterList);
+        ClearCheckboxes(LocationFilterList);
         _suppressFilterEvents = false;
         ViewModel.ClearFilters();
+    }
+
+    private static void SyncCheckboxFilter(Microsoft.UI.Xaml.Controls.ItemsRepeater repeater, HashSet<string> target)
+    {
+        target.Clear();
+        for (var i = 0; i < repeater.ItemsSourceView.Count; i++)
+        {
+            if (repeater.TryGetElement(i) is CheckBox cb && cb.IsChecked == true)
+            {
+                target.Add(cb.Content?.ToString() ?? "");
+            }
+        }
+    }
+
+    private static void ClearCheckboxes(Microsoft.UI.Xaml.Controls.ItemsRepeater repeater)
+    {
+        for (var i = 0; i < repeater.ItemsSourceView.Count; i++)
+        {
+            if (repeater.TryGetElement(i) is CheckBox cb)
+            {
+                cb.IsChecked = false;
+            }
+        }
     }
 
     private void Resource_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)

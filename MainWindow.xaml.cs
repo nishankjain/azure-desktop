@@ -173,7 +173,6 @@ public sealed partial class MainWindow : Window
         {
             AddNavItems(
                 CreateNavItem("Overview", "RGDetail", "\xE946"),
-                CreateNavItem("Resources", "RGResources", "\xE74C"),
                 CreateNavItem("Manage Tags", "RGTags", "\xE1CB"),
                 CreateNavItem("Manage Locks", "RGLocks", "\xE72E"));
         }
@@ -181,7 +180,6 @@ public sealed partial class MainWindow : Window
         {
             AddNavItems(
                 CreateNavItem("Overview", "SubscriptionDetail", "\xE946"),
-                CreateNavItem("Resource Groups", "ResourceGroups", "\xE8B7"),
                 CreateNavItem("Manage Tags", "ManageTags", "\xE1CB"),
                 CreateNavItem("Manage Locks", "ManageLocks", "\xE72E"),
                 CreateNavItem("Preview Features", "PreviewFeatures", "\xE7FC"));
@@ -190,10 +188,8 @@ public sealed partial class MainWindow : Window
         var activeTag = pageType switch
         {
             var t when t == typeof(SubscriptionDetailPage) => "SubscriptionDetail",
-            var t when t == typeof(ResourceGroupsPage) => "ResourceGroups",
             var t when t == typeof(FeaturesPage) || t == typeof(FeatureDetailPage) => "PreviewFeatures",
             var t when t == typeof(ResourceGroupDetailPage) => "RGDetail",
-            var t when t == typeof(ResourcesPage) => "RGResources",
             var t when t == typeof(ResourceDetailPage) => isAppGw ? "AppGwOverview" : "ResourceDetail",
             var t when t == typeof(TagsPage) => "ManageTags",
             var t when t == typeof(LocksPage) => "ManageLocks",
@@ -308,9 +304,6 @@ public sealed partial class MainWindow : Window
                 case "RGDetail":
                     ContentFrame.Navigate(typeof(ResourceGroupDetailPage), _activeNavContext with { Resource = null });
                     return;
-                case "RGResources":
-                    ContentFrame.Navigate(typeof(ResourcesPage), _activeNavContext with { Resource = null });
-                    return;
                 case "RGTags":
                     NavigateToTags(rgId, BuildBreadcrumbs("rg"));
                     return;
@@ -327,9 +320,6 @@ public sealed partial class MainWindow : Window
             {
                 case "SubscriptionDetail":
                     ContentFrame.Navigate(typeof(SubscriptionDetailPage), _activeSubscription);
-                    return;
-                case "ResourceGroups":
-                    ContentFrame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_activeSubscription));
                     return;
                 case "ManageTags":
                     NavigateToTags($"/subscriptions/{_activeSubscription.Id}", BuildBreadcrumbs("sub"));
@@ -373,7 +363,6 @@ public sealed partial class MainWindow : Window
 
         if (_activeNavContext?.ResourceGroupName is not null)
         {
-            crumbs.Add("Resource Groups");
             crumbs.Add(_activeNavContext.ResourceGroupName);
         }
 
@@ -384,7 +373,6 @@ public sealed partial class MainWindow : Window
 
         if (_activeNavContext?.Resource is not null)
         {
-            crumbs.Add("Resources");
             crumbs.Add(_activeNavContext.Resource.Name);
         }
 

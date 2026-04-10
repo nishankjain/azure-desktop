@@ -67,17 +67,17 @@ public sealed partial class ResourceGroupsPage : Page
         SortNameButton.Content = $"Name {arrow}";
     }
 
-    private void LocationFilterList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void LocationFilter_Changed(object sender, RoutedEventArgs e)
     {
-        if (_suppressFilterEvents)
-        {
-            return;
-        }
+        if (_suppressFilterEvents) return;
 
         ViewModel.SelectedLocations.Clear();
-        foreach (string item in LocationFilterList.SelectedItems)
+        for (var i = 0; i < LocationFilterList.ItemsSourceView.Count; i++)
         {
-            ViewModel.SelectedLocations.Add(item);
+            if (LocationFilterList.TryGetElement(i) is CheckBox cb && cb.IsChecked == true)
+            {
+                ViewModel.SelectedLocations.Add(cb.Content?.ToString() ?? "");
+            }
         }
 
         ViewModel.OnFilterChanged();
@@ -86,7 +86,14 @@ public sealed partial class ResourceGroupsPage : Page
     private void ClearFilters_Click(object sender, RoutedEventArgs e)
     {
         _suppressFilterEvents = true;
-        LocationFilterList.SelectedItems.Clear();
+        for (var i = 0; i < LocationFilterList.ItemsSourceView.Count; i++)
+        {
+            if (LocationFilterList.TryGetElement(i) is CheckBox cb)
+            {
+                cb.IsChecked = false;
+            }
+        }
+
         _suppressFilterEvents = false;
         ViewModel.ClearFilters();
     }

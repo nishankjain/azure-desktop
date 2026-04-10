@@ -37,9 +37,7 @@ public sealed partial class AppGwSectionPage : Page
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");
             BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add("Resource Groups");
             BreadcrumbItems.Add(ctx.ResourceGroupName ?? "");
-            BreadcrumbItems.Add("Resources");
             BreadcrumbItems.Add(ctx.Resource?.Name ?? "");
             BreadcrumbItems.Add(SectionTitle);
             Breadcrumb.ItemsSource = BreadcrumbItems;
@@ -63,15 +61,9 @@ public sealed partial class AppGwSectionPage : Page
                 Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
                 break;
             case 2:
-                Frame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_navCtx.Subscription));
-                break;
-            case 3:
                 Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null });
                 break;
-            case 4:
-                Frame.Navigate(typeof(ResourcesPage), _navCtx with { Resource = null });
-                break;
-            case 5:
+            case 3:
                 Frame.Navigate(typeof(ResourceDetailPage), _navCtx);
                 break;
         }

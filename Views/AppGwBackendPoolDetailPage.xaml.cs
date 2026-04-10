@@ -39,9 +39,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");
             BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add("Resource Groups");
             BreadcrumbItems.Add(ctx.ResourceGroupName ?? "");
-            BreadcrumbItems.Add("Resources");
             BreadcrumbItems.Add(ctx.Resource?.Name ?? "");
             BreadcrumbItems.Add("Backend Pools");
             BreadcrumbItems.Add(poolName);
@@ -59,11 +57,9 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         {
             case 0: Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); break;
             case 1: Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription); break;
-            case 2: Frame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_navCtx.Subscription)); break;
-            case 3: Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null }); break;
-            case 4: Frame.Navigate(typeof(ResourcesPage), _navCtx with { Resource = null }); break;
-            case 5: Frame.Navigate(typeof(ResourceDetailPage), _navCtx); break;
-            case 6: Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.BackendPools)); break;
+            case 2: Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null }); break;
+            case 3: Frame.Navigate(typeof(ResourceDetailPage), _navCtx); break;
+            case 4: Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.BackendPools)); break;
         }
     }
 

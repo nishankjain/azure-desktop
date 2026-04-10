@@ -28,9 +28,7 @@ public sealed partial class ResourceDetailPage : Page
             BreadcrumbItems.Clear();
             BreadcrumbItems.Add("Subscriptions");
             BreadcrumbItems.Add(ctx.SubscriptionName);
-            BreadcrumbItems.Add("Resource Groups");
             BreadcrumbItems.Add(ctx.ResourceGroupName ?? "");
-            BreadcrumbItems.Add("Resources");
             BreadcrumbItems.Add(ctx.Resource.Name);
             Breadcrumb.ItemsSource = BreadcrumbItems;
 
@@ -52,13 +50,7 @@ public sealed partial class ResourceDetailPage : Page
                 Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx.Subscription);
                 break;
             case 2:
-                Frame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_navCtx.Subscription));
-                break;
-            case 3:
                 Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx with { Resource = null });
-                break;
-            case 4:
-                Frame.Navigate(typeof(ResourcesPage), _navCtx with { Resource = null });
                 break;
         }
     }

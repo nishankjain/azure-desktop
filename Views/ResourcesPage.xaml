@@ -39,32 +39,36 @@
                 PlaceholderText="Search by name..."
                 Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-            <!-- Type filter (multi-select flyout) -->
+            <!-- Type filter -->
             <DropDownButton Content="Filter by type">
                 <DropDownButton.Flyout>
-                    <Flyout>
-                        <ListView
-                            x:Name="TypeFilterList"
-                            Width="280"
-                            MaxHeight="300"
-                            ItemsSource="{x:Bind ViewModel.TypeFilters, Mode=OneWay}"
-                            SelectionChanged="TypeFilterList_SelectionChanged"
-                            SelectionMode="Multiple" />
+                    <Flyout Placement="BottomEdgeAlignedLeft">
+                        <ScrollViewer MaxHeight="300">
+                            <ItemsRepeater x:Name="TypeFilterList" ItemsSource="{x:Bind ViewModel.TypeFilters, Mode=OneWay}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <CheckBox Content="{x:Bind}" Checked="TypeFilter_Changed" Unchecked="TypeFilter_Changed" />
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
                     </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
 
-            <!-- Location filter (multi-select flyout) -->
+            <!-- Location filter -->
             <DropDownButton Content="Filter by location">
                 <DropDownButton.Flyout>
                     <Flyout>
-                        <ListView
-                            x:Name="LocationFilterList"
-                            Width="280"
-                            MaxHeight="300"
-                            ItemsSource="{x:Bind ViewModel.LocationFilters, Mode=OneWay}"
-                            SelectionChanged="LocationFilterList_SelectionChanged"
-                            SelectionMode="Multiple" />
+                        <ScrollViewer MaxHeight="300">
+                            <ItemsRepeater x:Name="LocationFilterList" ItemsSource="{x:Bind ViewModel.LocationFilters, Mode=OneWay}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <CheckBox Content="{x:Bind}" Checked="LocationFilter_Changed" Unchecked="LocationFilter_Changed" />
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
                     </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
@@ -112,7 +116,7 @@
                                     FontSize="14"
                                     FontWeight="SemiBold"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="{x:Bind TypeName}" />
+                                    Text="{x:Bind DisplayName}" />
                                 <Border
                                     Padding="6,2"
                                     Background="{ThemeResource SubtleFillColorSecondaryBrush}"
@@ -141,18 +145,13 @@
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" VerticalAlignment="Center" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    FontSize="12"
-                                                    Margin="8,0"
-                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                    VerticalAlignment="Center"
-                                                    Text="{x:Bind Location}" />
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
+                                                </StackPanel>
                                                 <FontIcon
-                                                    Grid.Column="2"
+                                                    Grid.Column="1"
                                                     FontSize="12"
                                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                                     Glyph="&#xE76C;"

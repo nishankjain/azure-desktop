@@ -41,13 +41,15 @@
             <DropDownButton Content="Filter by location">
                 <DropDownButton.Flyout>
                     <Flyout>
-                        <ListView
-                            x:Name="LocationFilterList"
-                            Width="280"
-                            MaxHeight="300"
-                            ItemsSource="{x:Bind ViewModel.LocationFilters, Mode=OneWay}"
-                            SelectionChanged="LocationFilterList_SelectionChanged"
-                            SelectionMode="Multiple" />
+                        <ScrollViewer MaxHeight="300">
+                            <ItemsRepeater x:Name="LocationFilterList" ItemsSource="{x:Bind ViewModel.LocationFilters, Mode=OneWay}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <CheckBox Content="{x:Bind}" Checked="LocationFilter_Changed" Unchecked="LocationFilter_Changed" />
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </ScrollViewer>
                     </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
