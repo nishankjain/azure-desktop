@@ -115,8 +115,19 @@
                                         <ScrollViewer MaxHeight="300">
                                             <ItemsRepeater x:Name="TypeFilterList" ItemsSource="{x:Bind ResViewModel.TypeFilters, Mode=OneWay}">
                                                 <ItemsRepeater.ItemTemplate>
-                                                    <DataTemplate x:DataType="x:String">
-                                                        <CheckBox Content="{x:Bind}" Checked="TypeFilter_Changed" Unchecked="TypeFilter_Changed" />
+                                                    <DataTemplate x:DataType="vm:TypeFilterItem">
+                                                        <CheckBox Checked="TypeFilter_Changed" Unchecked="TypeFilter_Changed">
+                                                            <CheckBox.Content>
+                                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                    <Image Width="16" Height="16" VerticalAlignment="Center">
+                                                                        <Image.Source>
+                                                                            <SvgImageSource UriSource="{x:Bind IconPath}" />
+                                                                        </Image.Source>
+                                                                    </Image>
+                                                                    <TextBlock Text="{x:Bind DisplayName}" VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </CheckBox.Content>
+                                                        </CheckBox>
                                                     </DataTemplate>
                                                 </ItemsRepeater.ItemTemplate>
                                             </ItemsRepeater>
@@ -177,7 +188,6 @@
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Image Width="24" Height="24" VerticalAlignment="Center">
                                         <Image.Source>
@@ -188,8 +198,7 @@
                                         <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
                                         <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" Text="{x:Bind DisplayType}" />
-                                    <FontIcon Grid.Column="3" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
+                                    <FontIcon Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>

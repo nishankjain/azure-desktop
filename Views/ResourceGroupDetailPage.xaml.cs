@@ -96,7 +96,9 @@ public sealed partial class ResourceGroupDetailPage : Page
         {
             if (repeater.TryGetElement(i) is CheckBox cb && cb.IsChecked == true)
             {
-                target.Add(cb.Content?.ToString() ?? "");
+                var item = repeater.ItemsSourceView.GetAt(i);
+                var label = item is TypeFilterItem tfi ? tfi.DisplayName : item?.ToString() ?? "";
+                target.Add(label);
             }
         }
     }

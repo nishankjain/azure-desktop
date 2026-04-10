@@ -7,6 +7,12 @@ namespace AzureDesktop.ViewModels;
 
 using AzureDesktop.Helpers;
 
+public sealed class TypeFilterItem(string displayName, string iconPath)
+{
+    public string DisplayName { get; } = displayName;
+    public string IconPath { get; } = iconPath;
+}
+
 public partial class ResourceItem(string name, string type, string location, string resourceId)
 {
     public string Name { get; } = name;
@@ -105,7 +111,7 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
     private readonly Dictionary<string, string> _typeDisplayToRaw = new(StringComparer.OrdinalIgnoreCase);
 
-    public ObservableCollection<string> TypeFilters { get; } = [];
+    public ObservableCollection<TypeFilterItem> TypeFilters { get; } = [];
 
     public ObservableCollection<string> LocationFilters { get; } = [];
 
@@ -160,7 +166,8 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
             foreach (var t in types.OrderBy(t => t))
             {
-                TypeFilters.Add(new ResourceItem(string.Empty, t, string.Empty, string.Empty).DisplayType);
+                var display = new ResourceItem(string.Empty, t, string.Empty, string.Empty).DisplayType;
+                TypeFilters.Add(new TypeFilterItem(display, ResourceIconResolver.GetIconPath(t)));
             }
 
             // Build mapping for filter lookup
