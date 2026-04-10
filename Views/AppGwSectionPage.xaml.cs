@@ -133,7 +133,7 @@ public sealed partial class AppGwSectionPage : Page
                 break;
 
             case AppGwSection.BackendPools:
-                RenderTable(ViewModel.BackendPools, ["Name", "Address Count", "Addresses"], "No backend pools configured.");
+                RenderTable(ViewModel.BackendPools, ["Name", "Targets", "Associated Rules"], "No backend pools configured.");
                 break;
             case AppGwSection.BackendSettings:
                 RenderTable(ViewModel.BackendSettings, ["Name", "Protocol", "Port", "Cookie Affinity", "Request Timeout", "Host Name"], "No backend settings configured.");
@@ -297,10 +297,13 @@ public sealed partial class AppGwSectionPage : Page
         Grid.SetRow(divider, 1);
         tableGrid.Children.Add(divider);
 
-        // Data rows (inside a ScrollViewer)
-        var dataStack = new StackPanel { Padding = new Thickness(12, 4, 12, 12) };
+        // Data rows (ListView provides UI virtualization)
+        var dataListView = new ListView
+        {
+            SelectionMode = ListViewSelectionMode.None,
+            Padding = new Thickness(12, 4, 12, 12),
+        };
 
-        // Data rows
         foreach (var row in rows)
         {
             var rowName = row.TryGetValue("Name", out var n) ? n : "";
@@ -340,12 +343,20 @@ public sealed partial class AppGwSectionPage : Page
                 confirmGrid.Children.Add(confirmText);
                 confirmGrid.Children.Add(confirmBtn);
                 confirmGrid.Children.Add(cancelBtn);
-                dataStack.Children.Add(confirmGrid);
+                dataListView.Items.Add(confirmGrid);
             }
             else
             {
                 // Normal data row
                 var rowGrid = new Grid { Padding = new Thickness(0, 6, 0, 6) };
+
+                // Make rows clickable for sections with detail pages
+                if (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules)
+                {
+                    rowGrid.PointerPressed += (s, _) => NavigateToSubDetail(rowName);
+                    rowGrid.PointerEntered += (s, _) => ((Grid)s).Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"];
+                    rowGrid.PointerExited += (s, _) => ((Grid)s).Background = null;
+                }
 
                 for (int c = 0; c < columns.Count; c++)
                 {
@@ -406,24 +417,12 @@ public sealed partial class AppGwSectionPage : Page
                     rowGrid.Children.Add(actionsPanel);
                 }
 
-                dataStack.Children.Add(rowGrid);
+                dataListView.Items.Add(rowGrid);
             }
-
-            dataStack.Children.Add(new Border
-            {
-                Height = 1,
-                Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"],
-                Opacity = 0.3,
-            });
         }
 
-        var dataScrollViewer = new ScrollViewer
-        {
-            Content = dataStack,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-        };
-        Grid.SetRow(dataScrollViewer, 2);
-        tableGrid.Children.Add(dataScrollViewer);
+        Grid.SetRow(dataListView, 2);
+        tableGrid.Children.Add(dataListView);
 
         var tableBorder = new Border
         {
@@ -438,6 +437,20 @@ public sealed partial class AppGwSectionPage : Page
         ContentArea.RowDefinitions.Clear();
         ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         ContentArea.Children.Add(tableBorder);
+    }
+
+    private void NavigateToSubDetail(string itemName)
+    {
+        if (_navCtx is null) return;
+
+        if (_section == AppGwSection.BackendPools)
+        {
+            Frame.Navigate(typeof(AppGwBackendPoolDetailPage), (_navCtx, itemName));
+        }
+        else if (_section == AppGwSection.RoutingRules)
+        {
+            Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), (_navCtx, itemName));
+        }
     }
 
     private void DeleteRow_Click(object sender, RoutedEventArgs e)
@@ -635,8 +648,9 @@ public sealed partial class AppGwSectionPage : Page
         }
     }
 
-    // Field definitions that should use a ComboBox instead of TextBox
-    private static readonly Dictionary<string, string[]> ComboFields = new()
+    // Field definitions that should use a ComboBox or RadioButtons instead of TextBox
+    // Fields with <= 3 options use RadioButtons, > 3 use ComboBox
+    private static readonly Dictionary<string, string[]> ChoiceFields = new()
     {
         ["Protocol"] = ["Http", "Https"],
         ["Cookie Affinity"] = ["Enabled", "Disabled"],
@@ -652,7 +666,7 @@ public sealed partial class AppGwSectionPage : Page
         bool isEdit)
     {
         var stack = new StackPanel { Spacing = 12, MinWidth = 400 };
-        var controls = new Dictionary<string, object>(); // TextBox or ComboBox
+        var controls = new Dictionary<string, object>(); // TextBox, ComboBox, or RadioButtons (StackPanel)
 
         foreach (var (field, placeholder) in fields)
         {
@@ -667,22 +681,51 @@ public sealed partial class AppGwSectionPage : Page
 
             var currentValue = values.GetValueOrDefault(field) ?? "";
 
-            if (ComboFields.TryGetValue(field, out var options) && !isNameOnEdit)
+            if (ChoiceFields.TryGetValue(field, out var options) && !isNameOnEdit)
             {
-                var combo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
-                foreach (var opt in options)
+                if (options.Length <= 3)
                 {
-                    combo.Items.Add(opt);
-                }
+                    // Use RadioButtons for <= 3 options
+                    var radioPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
+                    var groupName = $"Radio_{field.Replace(" ", "")}";
+                    foreach (var opt in options)
+                    {
+                        var radio = new RadioButton
+                        {
+                            Content = opt,
+                            GroupName = groupName,
+                            IsChecked = opt.Equals(currentValue, StringComparison.OrdinalIgnoreCase),
+                        };
+                        radioPanel.Children.Add(radio);
+                    }
 
-                combo.SelectedItem = options.FirstOrDefault(o => o.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
-                if (combo.SelectedItem is null && options.Length > 0)
+                    // Default first if none selected
+                    if (!radioPanel.Children.OfType<RadioButton>().Any(r => r.IsChecked == true) && radioPanel.Children.Count > 0)
+                    {
+                        ((RadioButton)radioPanel.Children[0]).IsChecked = true;
+                    }
+
+                    controls[field] = radioPanel;
+                    fieldStack.Children.Add(radioPanel);
+                }
+                else
                 {
-                    combo.SelectedIndex = 0;
-                }
+                    // Use ComboBox for > 3 options
+                    var combo = new ComboBox { HorizontalAlignment = HorizontalAlignment.Stretch };
+                    foreach (var opt in options)
+                    {
+                        combo.Items.Add(opt);
+                    }
 
-                controls[field] = combo;
-                fieldStack.Children.Add(combo);
+                    combo.SelectedItem = options.FirstOrDefault(o => o.Equals(currentValue, StringComparison.OrdinalIgnoreCase));
+                    if (combo.SelectedItem is null && options.Length > 0)
+                    {
+                        combo.SelectedIndex = 0;
+                    }
+
+                    controls[field] = combo;
+                    fieldStack.Children.Add(combo);
+                }
             }
             else
             {
@@ -690,7 +733,7 @@ public sealed partial class AppGwSectionPage : Page
                 {
                     PlaceholderText = placeholder,
                     Text = currentValue,
-                    IsReadOnly = isNameOnEdit,
+                    IsEnabled = !isNameOnEdit,
                 };
                 controls[field] = textBox;
                 fieldStack.Children.Add(textBox);
@@ -720,6 +763,7 @@ public sealed partial class AppGwSectionPage : Page
                 {
                     TextBox tb => tb.Text,
                     ComboBox cb => cb.SelectedItem?.ToString() ?? "",
+                    StackPanel rp => rp.Children.OfType<RadioButton>().FirstOrDefault(r => r.IsChecked == true)?.Content?.ToString() ?? "",
                     _ => "",
                 };
             }

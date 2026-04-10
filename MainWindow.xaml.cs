@@ -95,6 +95,11 @@ public sealed partial class MainWindow : Window
             _activeSubscription = ctx.Subscription;
             _activeNavContext = ctx;
         }
+        else if (e.Parameter is (NavigationContext subDetailCtx, string _))
+        {
+            _activeSubscription = subDetailCtx.Subscription;
+            _activeNavContext = subDetailCtx;
+        }
         else if (e.Parameter is (string, List<string>, NavigationContext tagLockCtx))
         {
             _activeSubscription = tagLockCtx.Subscription;
@@ -133,9 +138,10 @@ public sealed partial class MainWindow : Window
         // Tags/Locks pages inherit their parent's scope
         var isTagsOrLocks = pageType == typeof(TagsPage) || pageType == typeof(LocksPage);
         var isAppGwSection = pageType == typeof(AppGwSectionPage);
+        var isAppGwSubDetail = pageType == typeof(AppGwBackendPoolDetailPage) || pageType == typeof(AppGwRoutingRuleDetailPage);
         var isAppGw = _activeNavContext?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true;
 
-        if (_activeNavContext?.Resource is not null && isAppGw && (pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
+        if (_activeNavContext?.Resource is not null && isAppGw && (pageType == typeof(ResourceDetailPage) || isAppGwSection || isAppGwSubDetail || isTagsOrLocks))
         {
             // AppGW-specific nav
             AddNavItems(
@@ -192,6 +198,8 @@ public sealed partial class MainWindow : Window
             var t when t == typeof(TagsPage) => "ManageTags",
             var t when t == typeof(LocksPage) => "ManageLocks",
             var t when t == typeof(AppGwSectionPage) => _lastAppGwNavTag,
+            var t when t == typeof(AppGwBackendPoolDetailPage) => "AppGwBackendPools",
+            var t when t == typeof(AppGwRoutingRuleDetailPage) => "AppGwRoutingRules",
             _ => null,
         };
 

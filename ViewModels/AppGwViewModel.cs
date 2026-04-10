@@ -28,6 +28,8 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
 {
     private ApplicationGatewayData? _data;
 
+    public ApplicationGatewayData? Data => _data;
+
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
@@ -184,19 +186,29 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
         }
     }
 
+    private static string? SubResourceName(Azure.Core.ResourceIdentifier? id)
+    {
+        if (id is null) return null;
+        var name = id.Name;
+        if (name is null) return null;
+        var idx = name.LastIndexOf('/');
+        return idx >= 0 ? name[(idx + 1)..] : name;
+    }
+
     private void PopulateBackendPools()
     {
         BackendPools.Clear();
         if (_data is null) return;
         foreach (var pool in _data.BackendAddressPools)
         {
-            var d = new Dictionary<string, string>
+            var associatedRules = _data.RequestRoutingRules
+                .Count(r => SubResourceName(r.BackendAddressPoolId) == pool.Name);
+            BackendPools.Add(new Dictionary<string, string>
             {
                 ["Name"] = pool.Name ?? "",
-                ["Addresses"] = string.Join(", ", pool.BackendAddresses?.Select(a => a.Fqdn ?? a.IPAddress ?? "") ?? []),
-                ["Address Count"] = (pool.BackendAddresses?.Count ?? 0).ToString(),
-            };
-            BackendPools.Add(d);
+                ["Targets"] = (pool.BackendAddresses?.Count ?? 0).ToString(),
+                ["Associated Rules"] = associatedRules.ToString(),
+            });
         }
     }
 
@@ -323,9 +335,9 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
                 ["Name"] = r.Name ?? "",
                 ["Rule Type"] = r.RuleType?.ToString() ?? "",
                 ["Priority"] = r.Priority?.ToString() ?? "",
-                ["Listener"] = r.HttpListenerId?.Name ?? "",
-                ["Backend Pool"] = r.BackendAddressPoolId?.Name ?? "",
-                ["Backend Settings"] = r.BackendHttpSettingsId?.Name ?? "",
+                ["Listener"] = SubResourceName(r.HttpListenerId) ?? "",
+                ["Backend Pool"] = SubResourceName(r.BackendAddressPoolId) ?? "",
+                ["Backend Settings"] = SubResourceName(r.BackendHttpSettingsId) ?? "",
             });
         }
     }
