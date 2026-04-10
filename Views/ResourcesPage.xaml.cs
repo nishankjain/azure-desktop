@@ -124,4 +124,20 @@ public sealed partial class ResourcesPage : Page
             Frame.Navigate(typeof(ResourceDetailPage), ctx);
         }
     }
+
+    private void ResourceTile_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorSecondaryBrush"];
+        }
+    }
+
+    private void ResourceTile_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
+        }
+    }
 }

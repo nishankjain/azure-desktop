@@ -16,7 +16,7 @@ public sealed class ApplicationGatewayService(IAzureAuthService authService) : I
         ApplicationGatewayData data,
         CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var resourceGroupId = ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroupName);
         var resourceGroup = client.GetResourceGroupResource(resourceGroupId);
         var collection = resourceGroup.GetApplicationGateways();
@@ -35,7 +35,7 @@ public sealed class ApplicationGatewayService(IAzureAuthService authService) : I
         string resourceGroupName,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var resourceGroupId = ResourceGroupResource.CreateResourceIdentifier(subscriptionId, resourceGroupName);
         var resourceGroup = client.GetResourceGroupResource(resourceGroupId);
         var collection = resourceGroup.GetApplicationGateways();
@@ -51,7 +51,7 @@ public sealed class ApplicationGatewayService(IAzureAuthService authService) : I
         ApplicationGatewayData data,
         CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var id = new Azure.Core.ResourceIdentifier(resourceId);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(id.SubscriptionId!, id.ResourceGroupName!);
         var rg = client.GetResourceGroupResource(rgId);

@@ -132,7 +132,7 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
         try
         {
-            var client = new ArmClient(authService.Credential);
+            var client = authService.Client;
             var subscription = client.GetSubscriptionResource(
                 new Azure.Core.ResourceIdentifier($"/subscriptions/{subscriptionId}"));
             var rg = (await subscription.GetResourceGroups()

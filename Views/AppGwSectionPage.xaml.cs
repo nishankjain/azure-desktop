@@ -22,7 +22,7 @@ public sealed partial class AppGwSectionPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
@@ -42,7 +42,11 @@ public sealed partial class AppGwSectionPage : Page
             _breadcrumbHelper.Add(SectionTitle, () => { });
             _breadcrumbHelper.Apply();
 
-            // Data should already be loaded by the singleton ViewModel
+            if (ctx.Resource is not null)
+            {
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+            }
+
             RenderSection();
         }
     }

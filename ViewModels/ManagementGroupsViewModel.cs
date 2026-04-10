@@ -44,7 +44,7 @@ public partial class ManagementGroupsViewModel(
 
         try
         {
-            var client = new ArmClient(authService.Credential);
+            var client = authService.Client;
 
             await foreach (var mg in client.GetManagementGroups().GetAllAsync(cancellationToken: cancellationToken))
             {

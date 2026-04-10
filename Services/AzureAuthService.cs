@@ -1,5 +1,6 @@
 using Azure.Core;
 using Azure.Identity;
+using Azure.ResourceManager;
 
 namespace AzureDesktop.Services;
 
@@ -12,9 +13,13 @@ public sealed class AzureAuthService : IAzureAuthService
         "auth_record.json");
 
     private InteractiveBrowserCredential? _credential;
+    private ArmClient? _client;
 
     public TokenCredential Credential =>
         _credential ?? throw new InvalidOperationException("Not authenticated. Call SignInAsync first.");
+
+    public ArmClient Client =>
+        _client ?? throw new InvalidOperationException("Not authenticated. Call SignInAsync first.");
 
     public bool IsAuthenticated => _credential is not null;
 
@@ -38,6 +43,7 @@ public sealed class AzureAuthService : IAzureAuthService
                 cancellationToken);
 
             _credential = credential;
+            _client = new ArmClient(credential);
             return true;
         }
         catch
@@ -62,11 +68,13 @@ public sealed class AzureAuthService : IAzureAuthService
         await record.SerializeAsync(stream, cancellationToken);
 
         _credential = credential;
+        _client = new ArmClient(credential);
     }
 
     public void SignOut()
     {
         _credential = null;
+        _client = null;
 
         try
         {

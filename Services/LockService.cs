@@ -25,7 +25,7 @@ public sealed class LockService(IAzureAuthService authService) : ILockService
         string resourceId,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var resource = client.GetGenericResource(new ResourceIdentifier(resourceId));
         var lockCollection = resource.GetManagementLocks();
 
@@ -50,7 +50,7 @@ public sealed class LockService(IAzureAuthService authService) : ILockService
         string resourceId, string name, ManagementLockLevel level, string notes,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var resource = client.GetGenericResource(new ResourceIdentifier(resourceId));
         var lockCollection = resource.GetManagementLocks();
 
@@ -64,7 +64,7 @@ public sealed class LockService(IAzureAuthService authService) : ILockService
 
     public async Task DeleteLockAsync(string lockResourceId, CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var lockResource = client.GetManagementLockResource(new ResourceIdentifier(lockResourceId));
         await lockResource.DeleteAsync(Azure.WaitUntil.Completed, cancellationToken);
     }

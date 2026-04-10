@@ -93,7 +93,7 @@ public partial class ResourceDetailViewModel(IAzureAuthService authService) : Ob
 
         try
         {
-            var client = new ArmClient(authService.Credential);
+            var client = authService.Client;
             var gwResource = client.GetApplicationGatewayResource(
                 new Azure.Core.ResourceIdentifier(ResourceId));
             var gw = await gwResource.GetAsync(cancellationToken);

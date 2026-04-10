@@ -96,7 +96,7 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         return idx >= 0 ? name[(idx + 1)..] : name;
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
@@ -114,6 +114,11 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
             _breadcrumbHelper.Add("Routing Rules", () => Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.RoutingRules)));
             _breadcrumbHelper.Add("Routing Rule", () => { });
             _breadcrumbHelper.Apply();
+
+            if (ctx.Resource is not null)
+            {
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+            }
 
             RenderForm();
         }

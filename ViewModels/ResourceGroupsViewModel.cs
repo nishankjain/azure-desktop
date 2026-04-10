@@ -54,7 +54,7 @@ public partial class ResourceGroupsViewModel(IAzureAuthService authService) : Ob
 
         try
         {
-            var client = new ArmClient(authService.Credential);
+            var client = authService.Client;
             var subscription = client.GetSubscriptionResource(
                 new Azure.Core.ResourceIdentifier($"/subscriptions/{subItem.Id}"));
 

@@ -25,7 +25,7 @@ public sealed class FeatureService(IAzureAuthService authService) : IFeatureServ
         string subscriptionId,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var subscription = client.GetSubscriptionResource(
             new Azure.Core.ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 
@@ -43,7 +43,7 @@ public sealed class FeatureService(IAzureAuthService authService) : IFeatureServ
         string subscriptionId, string providerNamespace,
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var subscription = client.GetSubscriptionResource(
             new Azure.Core.ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 
@@ -72,7 +72,7 @@ public sealed class FeatureService(IAzureAuthService authService) : IFeatureServ
         string subscriptionId, string providerNamespace, string featureName,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var featureId = FeatureResource.CreateResourceIdentifier(subscriptionId, providerNamespace, featureName);
         var featureResource = client.GetFeatureResource(featureId);
 
@@ -96,7 +96,7 @@ public sealed class FeatureService(IAzureAuthService authService) : IFeatureServ
         string subscriptionId, string providerNamespace, string featureName,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var featureId = FeatureResource.CreateResourceIdentifier(subscriptionId, providerNamespace, featureName);
         var featureResource = client.GetFeatureResource(featureId);
         await featureResource.RegisterAsync(cancellationToken);
@@ -106,7 +106,7 @@ public sealed class FeatureService(IAzureAuthService authService) : IFeatureServ
         string subscriptionId, string providerNamespace, string featureName,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var featureId = FeatureResource.CreateResourceIdentifier(subscriptionId, providerNamespace, featureName);
         var featureResource = client.GetFeatureResource(featureId);
         await featureResource.UnregisterAsync(cancellationToken);

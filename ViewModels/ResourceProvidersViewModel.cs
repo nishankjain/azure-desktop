@@ -89,12 +89,8 @@ public partial class ResourceProvidersViewModel(IResourceProviderService resourc
 
     public async Task LoadProvidersAsync(string subscriptionId, CancellationToken cancellationToken = default)
     {
-        if (_allProviders.Count > 0)
-        {
-            return;
-        }
-
         _subscriptionId = subscriptionId;
+        _allProviders.Clear();
         IsLoading = true;
         ErrorMessage = null;
 

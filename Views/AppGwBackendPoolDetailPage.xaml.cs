@@ -26,7 +26,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
@@ -44,6 +44,11 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
             _breadcrumbHelper.Add("Backend Pools", () => Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.BackendPools)));
             _breadcrumbHelper.Add("Backend Pool", () => { });
             _breadcrumbHelper.Apply();
+
+            if (ctx.Resource is not null)
+            {
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+            }
 
             LoadTargets();
             RenderRules();

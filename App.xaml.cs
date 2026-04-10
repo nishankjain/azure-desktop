@@ -26,14 +26,14 @@ public partial class App : Application
         services.AddSingleton<IResourceProviderService, ResourceProviderService>();
 
         // ViewModels
-        services.AddSingleton<SubscriptionsViewModel>();
+        services.AddTransient<SubscriptionsViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<SubscriptionDetailViewModel>();
         services.AddTransient<ResourceGroupsViewModel>();
         services.AddTransient<ResourceGroupDetailViewModel>();
         services.AddTransient<ResourcesViewModel>();
         services.AddTransient<ResourceDetailViewModel>();
-        services.AddSingleton<AppGwViewModel>();
+        services.AddTransient<AppGwViewModel>();
         services.AddTransient<TagManagerViewModel>();
         services.AddTransient<LockManagerViewModel>();
         services.AddTransient<FeaturesViewModel>();

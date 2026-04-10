@@ -9,7 +9,7 @@ public sealed class SubscriptionService(IAzureAuthService authService) : ISubscr
     public async IAsyncEnumerable<SubscriptionResource> GetSubscriptionsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
 
         await foreach (var subscription in client.GetSubscriptions().GetAllAsync(cancellationToken))
         {

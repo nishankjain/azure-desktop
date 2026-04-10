@@ -121,7 +121,7 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
 
         try
         {
-            var client = new ArmClient(authService.Credential);
+            var client = authService.Client;
             var gwResource = client.GetApplicationGatewayResource(new Azure.Core.ResourceIdentifier(resourceId));
             var gw = await gwResource.GetAsync(cancellationToken);
             _data = gw.Value.Data;

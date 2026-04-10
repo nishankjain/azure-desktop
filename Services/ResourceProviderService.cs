@@ -36,7 +36,7 @@ public sealed class ResourceProviderService(IAzureAuthService authService) : IRe
         string subscriptionId,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var subscription = client.GetSubscriptionResource(
             new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 
@@ -63,7 +63,7 @@ public sealed class ResourceProviderService(IAzureAuthService authService) : IRe
     public async Task RegisterAsync(string subscriptionId, string providerNamespace,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var subscription = client.GetSubscriptionResource(
             new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 
@@ -76,7 +76,7 @@ public sealed class ResourceProviderService(IAzureAuthService authService) : IRe
     public async Task UnregisterAsync(string subscriptionId, string providerNamespace,
         CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var subscription = client.GetSubscriptionResource(
             new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
 

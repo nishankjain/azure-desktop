@@ -87,12 +87,8 @@ public partial class FeaturesViewModel(IFeatureService featureService) : Observa
 
     public async Task LoadProvidersAsync(string subscriptionId, CancellationToken cancellationToken = default)
     {
-        if (_allProviders.Count > 0)
-        {
-            return; // Already cached
-        }
-
         _subscriptionId = subscriptionId;
+        _allProviders.Clear();
         IsLoading = true;
         ErrorMessage = null;
 

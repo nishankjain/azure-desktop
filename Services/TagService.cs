@@ -16,7 +16,7 @@ public sealed class TagService(IAzureAuthService authService) : ITagService
 {
     public async Task<IDictionary<string, string>> GetTagsAsync(string resourceId, CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var tagResource = client.GetTagResource(TagResource.CreateResourceIdentifier(new ResourceIdentifier(resourceId)));
         var response = await tagResource.GetAsync(cancellationToken);
         return response.Value.Data.TagValues;
@@ -24,7 +24,7 @@ public sealed class TagService(IAzureAuthService authService) : ITagService
 
     public async Task AddOrUpdateTagAsync(string resourceId, string key, string value, CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var tagResource = client.GetTagResource(TagResource.CreateResourceIdentifier(new ResourceIdentifier(resourceId)));
         var patch = new TagResourcePatch
         {
@@ -36,7 +36,7 @@ public sealed class TagService(IAzureAuthService authService) : ITagService
 
     public async Task RemoveTagAsync(string resourceId, string key, CancellationToken cancellationToken)
     {
-        var client = new ArmClient(authService.Credential);
+        var client = authService.Client;
         var tagResource = client.GetTagResource(TagResource.CreateResourceIdentifier(new ResourceIdentifier(resourceId)));
         var patch = new TagResourcePatch
         {

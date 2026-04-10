@@ -62,6 +62,12 @@ public sealed partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
+        // Trim back stack to prevent unbounded memory growth
+        while (ContentFrame.BackStack.Count > 5)
+        {
+            ContentFrame.BackStack.RemoveAt(0);
+        }
+
         _lastAppGwNavTag = null;
 
         if (e.Parameter is SubscriptionItem sub)
