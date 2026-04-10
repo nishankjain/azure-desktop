@@ -8,6 +8,10 @@
     xmlns:vm="using:AzureDesktop.ViewModels"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
+    <Page.Resources>
+        <CollectionViewSource x:Name="GroupedResourcesSource" IsSourceGrouped="True" />
+    </Page.Resources>
+
     <Grid Padding="16,8,40,40">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -105,75 +109,48 @@
             Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
             Severity="Warning" />
 
-        <!-- Grouped resource list -->
-        <ScrollViewer Grid.Row="4">
-            <ItemsRepeater ItemsSource="{x:Bind ViewModel.GroupedResources, Mode=OneWay}">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ResourceTypeGroup">
-                        <StackPanel Margin="0,0,0,16" Spacing="6">
-                            <!-- Type section header -->
-                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,4">
-                                <TextBlock
-                                    FontSize="14"
-                                    FontWeight="SemiBold"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="{x:Bind DisplayName}" />
-                                <Border
-                                    Padding="6,2"
-                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                    CornerRadius="8">
-                                    <TextBlock
-                                        FontSize="11"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        Text="{x:Bind Count}" />
+        <!-- Resource list -->
+        <ListView Grid.Row="4" IsItemClickEnabled="True" ItemClick="Resource_ItemClick" ItemsSource="{x:Bind GroupedResourcesSource.View, Mode=OneWay}" SelectionMode="None">
+            <ListView.ItemContainerStyle>
+                            <StaticResource ResourceKey="CardListViewItem" />
+                        </ListView.ItemContainerStyle>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="vm:ResourceTypeGroup">
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,4">
+                                <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind DisplayName}" />
+                                <Border Padding="6,2" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="8">
+                                    <TextBlock FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Count}" />
                                 </Border>
                             </StackPanel>
-
-                            <!-- Resources in this type -->
-                            <ItemsRepeater ItemsSource="{x:Bind Resources}">
-                                <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:ResourceItem">
-                                        <Border
-                                            Margin="0,2"
-                                            Padding="12,10"
-                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                            BorderThickness="1"
-                                            CornerRadius="6"
-                                            PointerEntered="ResourceTile_PointerEntered"
-                                            PointerExited="ResourceTile_PointerExited"
-                                            PointerPressed="Resource_PointerPressed"
-                                            Tag="{x:Bind}">
-                                            <Grid ColumnSpacing="10">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <Image Width="24" Height="24" VerticalAlignment="Center">
-                                                    <Image.Source>
-                                                        <SvgImageSource UriSource="{x:Bind IconPath}" />
-                                                    </Image.Source>
-                                                </Image>
-                                                <StackPanel Grid.Column="1" Spacing="2">
-                                                    <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
-                                                </StackPanel>
-                                                <FontIcon
-                                                    Grid.Column="2"
-                                                    FontSize="12"
-                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                    Glyph="&#xE76C;"
-                                                    VerticalAlignment="Center" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsRepeater.ItemTemplate>
-                            </ItemsRepeater>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ResourceItem">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Image Width="24" Height="24" VerticalAlignment="Center">
+                            <Image.Source>
+                                <SvgImageSource UriSource="{x:Bind IconPath}" />
+                            </Image.Source>
+                        </Image>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
                         </StackPanel>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </ScrollViewer>
+                        <TextBlock Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" Text="{x:Bind DisplayType}" />
+                        <FontIcon Grid.Column="3" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Page>

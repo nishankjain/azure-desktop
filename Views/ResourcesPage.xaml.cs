@@ -36,6 +36,8 @@ public sealed partial class ResourcesPage : Page
 
             await ViewModel.LoadForResourceGroupAsync(
                 ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, default);
+
+            RefreshGroupedSource();
         }
     }
 
@@ -64,6 +66,7 @@ public sealed partial class ResourcesPage : Page
 
     private void UpdateSortButtons()
     {
+        RefreshGroupedSource();
         var arrow = ViewModel.SortAscending ? "↑" : "↓";
         SortNameButton.Content = ViewModel.SortField == "Name" ? $"Name {arrow}" : "Name";
         SortTypeButton.Content = ViewModel.SortField == "Type" ? $"Type {arrow}" : "Type";
@@ -75,6 +78,7 @@ public sealed partial class ResourcesPage : Page
         if (_suppressFilterEvents) return;
         SyncCheckboxFilter(TypeFilterList, ViewModel.SelectedTypes);
         ViewModel.OnFilterChanged();
+        RefreshGroupedSource();
     }
 
     private void LocationFilter_Changed(object sender, RoutedEventArgs e)
@@ -82,6 +86,7 @@ public sealed partial class ResourcesPage : Page
         if (_suppressFilterEvents) return;
         SyncCheckboxFilter(LocationFilterList, ViewModel.SelectedLocations);
         ViewModel.OnFilterChanged();
+        RefreshGroupedSource();
     }
 
     private void ClearFilters_Click(object sender, RoutedEventArgs e)
@@ -91,6 +96,7 @@ public sealed partial class ResourcesPage : Page
         ClearCheckboxes(LocationFilterList);
         _suppressFilterEvents = false;
         ViewModel.ClearFilters();
+        RefreshGroupedSource();
     }
 
     private static void SyncCheckboxFilter(Microsoft.UI.Xaml.Controls.ItemsRepeater repeater, HashSet<string> target)
@@ -116,28 +122,17 @@ public sealed partial class ResourcesPage : Page
         }
     }
 
-    private void Resource_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void Resource_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (sender is Border { Tag: ResourceItem item } && _navCtx is not null)
+        if (e.ClickedItem is ResourceItem item && _navCtx is not null)
         {
             var ctx = _navCtx with { Resource = item };
             Frame.Navigate(typeof(ResourceDetailPage), ctx);
         }
     }
 
-    private void ResourceTile_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void RefreshGroupedSource()
     {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorSecondaryBrush"];
-        }
-    }
-
-    private void ResourceTile_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
-        }
+        GroupedResourcesSource.Source = ViewModel.GroupedResources;
     }
 }

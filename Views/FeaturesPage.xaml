@@ -75,6 +75,9 @@
                 </Grid.RowDefinitions>
                 <TextBlock Grid.Row="0" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,6" Text="Resource Providers" />
                 <ListView Grid.Row="1" IsItemClickEnabled="True" ItemClick="Provider_ItemClick" ItemsSource="{x:Bind ViewModel.FilteredProviders, Mode=OneWay}" SelectionMode="None">
+                    <ListView.ItemContainerStyle>
+                            <StaticResource ResourceKey="CardListViewItem" />
+                        </ListView.ItemContainerStyle>
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
                             <TextBlock FontSize="13" Text="{x:Bind}" TextTrimming="CharacterEllipsis" />
@@ -97,16 +100,11 @@
                 <InfoBar Grid.Row="1" Margin="0,4,0,0" IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Warning" />
                 <ListView Grid.Row="2" Margin="0,4,0,0" IsItemClickEnabled="True" ItemClick="FeatureList_ItemClick" ItemsSource="{x:Bind ViewModel.FilteredFeatures, Mode=OneWay}" SelectionMode="None">
                     <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="Padding" Value="0" />
-                            <Setter Property="Margin" Value="0,2" />
-                        </Style>
-                    </ListView.ItemContainerStyle>
+                            <StaticResource ResourceKey="CardListViewItem" />
+                        </ListView.ItemContainerStyle>
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:FeatureEntry">
-                            <Border Padding="12,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
-                                <Grid>
+                            <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -117,8 +115,7 @@
                                         <TextBlock FontSize="11" Text="{x:Bind State, Mode=OneWay}" />
                                     </Border>
                                     <FontIcon Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
-                                </Grid>
-                            </Border>
+                            </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>

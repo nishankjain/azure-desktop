@@ -60,11 +60,11 @@ public partial class ResourceItem(string name, string type, string location, str
 }
 
 public sealed class ResourceTypeGroup(string typeName, string displayName, IReadOnlyList<ResourceItem> resources)
+    : List<ResourceItem>(resources)
 {
     public string TypeName { get; } = typeName;
     public string DisplayName { get; } = displayName;
-    public int Count { get; } = resources.Count;
-    public IReadOnlyList<ResourceItem> Resources { get; } = resources;
+    public new int Count { get; } = resources.Count;
 }
 
 public partial class ResourcesViewModel(IAzureAuthService authService) : ObservableObject
@@ -88,15 +88,18 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(GroupedResources))]
+    [NotifyPropertyChangedFor(nameof(FlatResources))]
     public partial string? SearchText { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(GroupedResources))]
+    [NotifyPropertyChangedFor(nameof(FlatResources))]
     [NotifyPropertyChangedFor(nameof(SortIndicator))]
     public partial string SortField { get; set; } = "Name";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(GroupedResources))]
+    [NotifyPropertyChangedFor(nameof(FlatResources))]
     [NotifyPropertyChangedFor(nameof(SortIndicator))]
     public partial bool SortAscending { get; set; } = true;
 
@@ -113,6 +116,8 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
     public string SortIndicator => $"{SortField} {(SortAscending ? "↑" : "↓")}";
 
     public IReadOnlyList<ResourceTypeGroup> GroupedResources => ApplyFilterSortAndGroup();
+
+    public IReadOnlyList<ResourceItem> FlatResources => ApplyFilterAndSort();
 
     public async Task LoadForResourceGroupAsync(
         string subscriptionId, string subscriptionName, string resourceGroupName,
@@ -177,6 +182,7 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
             }
 
             OnPropertyChanged(nameof(GroupedResources));
+            OnPropertyChanged(nameof(FlatResources));
         }
         catch (OperationCanceledException)
         {
@@ -208,6 +214,7 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
     public void OnFilterChanged()
     {
         OnPropertyChanged(nameof(GroupedResources));
+        OnPropertyChanged(nameof(FlatResources));
     }
 
     public void ClearFilters()
@@ -216,6 +223,7 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
         SelectedTypes.Clear();
         SelectedLocations.Clear();
         OnPropertyChanged(nameof(GroupedResources));
+        OnPropertyChanged(nameof(FlatResources));
     }
 
     private List<ResourceTypeGroup> ApplyFilterSortAndGroup()
@@ -256,5 +264,37 @@ public partial class ResourcesViewModel(IAzureAuthService authService) : Observa
             : groups.OrderBy(g => g.DisplayName);
 
         return groups.ToList();
+    }
+
+    private List<ResourceItem> ApplyFilterAndSort()
+    {
+        IEnumerable<ResourceItem> result = _allResources;
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            result = result.Where(r => r.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (SelectedTypes.Count > 0)
+        {
+            var rawTypes = SelectedTypes
+                .Select(dt => _typeDisplayToRaw.GetValueOrDefault(dt, dt))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            result = result.Where(r => rawTypes.Contains(r.Type));
+        }
+
+        if (SelectedLocations.Count > 0)
+        {
+            result = result.Where(r => SelectedLocations.Contains(r.Location));
+        }
+
+        result = SortField switch
+        {
+            "Type" => SortAscending ? result.OrderBy(r => r.DisplayType).ThenBy(r => r.Name) : result.OrderByDescending(r => r.DisplayType).ThenBy(r => r.Name),
+            "Location" => SortAscending ? result.OrderBy(r => r.Location).ThenBy(r => r.Name) : result.OrderByDescending(r => r.Location).ThenBy(r => r.Name),
+            _ => SortAscending ? result.OrderBy(r => r.Name) : result.OrderByDescending(r => r.Name),
+        };
+
+        return result.ToList();
     }
 }

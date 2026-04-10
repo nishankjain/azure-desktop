@@ -44,6 +44,8 @@ public sealed partial class ResourceGroupDetailPage : Page
 
             await ResViewModel.LoadForResourceGroupAsync(
                 ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, default);
+
+            GroupedResourcesSource.Source = ResViewModel.GroupedResources;
         }
     }
 
@@ -52,9 +54,9 @@ public sealed partial class ResourceGroupDetailPage : Page
         _breadcrumbHelper?.HandleClick(args.Index);
     }
 
-    private void Resource_PointerPressed(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void Resource_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (sender is Border { Tag: ResourceItem item } && _navCtx is not null)
+        if (e.ClickedItem is ResourceItem item && _navCtx is not null)
         {
             var ctx = _navCtx with { Resource = item };
             Frame.Navigate(typeof(ResourceDetailPage), ctx);
@@ -66,6 +68,7 @@ public sealed partial class ResourceGroupDetailPage : Page
         if (_suppressFilterEvents) return;
         SyncCheckboxFilter(TypeFilterList, ResViewModel.SelectedTypes);
         ResViewModel.OnFilterChanged();
+        RefreshGroupedSource();
     }
 
     private void LocationFilter_Changed(object sender, RoutedEventArgs e)
@@ -73,6 +76,7 @@ public sealed partial class ResourceGroupDetailPage : Page
         if (_suppressFilterEvents) return;
         SyncCheckboxFilter(LocationFilterList, ResViewModel.SelectedLocations);
         ResViewModel.OnFilterChanged();
+        RefreshGroupedSource();
     }
 
     private void ClearFilters_Click(object sender, RoutedEventArgs e)
@@ -82,6 +86,7 @@ public sealed partial class ResourceGroupDetailPage : Page
         ClearCheckboxes(LocationFilterList);
         _suppressFilterEvents = false;
         ResViewModel.ClearFilters();
+        RefreshGroupedSource();
     }
 
     private static void SyncCheckboxFilter(Microsoft.UI.Xaml.Controls.ItemsRepeater repeater, HashSet<string> target)
@@ -127,6 +132,7 @@ public sealed partial class ResourceGroupDetailPage : Page
 
     private void UpdateSortButtons()
     {
+        RefreshGroupedSource();
         var arrow = ResViewModel.SortAscending ? "↑" : "↓";
         SortNameButton.Content = ResViewModel.SortField == "Name" ? $"Name {arrow}" : "Name";
         SortTypeButton.Content = ResViewModel.SortField == "Type" ? $"Type {arrow}" : "Type";
@@ -149,19 +155,8 @@ public sealed partial class ResourceGroupDetailPage : Page
         }
     }
 
-    private void ResourceTile_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void RefreshGroupedSource()
     {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorSecondaryBrush"];
-        }
-    }
-
-    private void ResourceTile_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
-        }
+        GroupedResourcesSource.Source = ResViewModel.GroupedResources;
     }
 }
