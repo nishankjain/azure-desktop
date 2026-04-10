@@ -11,6 +11,7 @@ public partial class SubscriptionItem(string id, string name, string state, stri
     public string Name { get; } = name;
     public string State { get; } = state;
     public string TenantId { get; } = tenantId;
+    public string IconPath { get; } = "ms-appx:///Assets/Icons/subscriptions.svg";
     public string AuthorizationSource { get; init; } = string.Empty;
     public string SpendingLimit { get; init; } = string.Empty;
     public string QuotaId { get; init; } = string.Empty;

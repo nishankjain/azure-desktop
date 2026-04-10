@@ -176,7 +176,7 @@ public sealed partial class MainWindow : Window
                 CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
         }
         else if (_activeNavContext?.ResourceGroupName is not null &&
-                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
+                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
         {
             AddNavItems(
                 CreateSvgNavItem("Overview", "RGDetail", "resourceGroups.svg"),

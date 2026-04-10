@@ -33,24 +33,28 @@
             <TextBlock FontSize="16" FontWeight="SemiBold" Text="Overview" />
             <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                 <StackPanel Spacing="16">
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Name" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
+                    <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE8CB;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Name" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Name, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Type" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Type, Mode=OneWay}" />
+                    <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE74C;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Type" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.Type, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location" />
-                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Location, Mode=OneWay}" />
+                    <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE81D;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.Location, Mode=OneWay}" VerticalAlignment="Center" />
                     </Grid>
                     <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" />
-                        <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ResourceId, Mode=OneWay}" TextWrapping="Wrap" />
+                    <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <FontIcon Glyph="&#xE71B;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ResourceId, Mode=OneWay}" TextWrapping="Wrap" VerticalAlignment="Center" />
                     </Grid>
                 </StackPanel>
             </Border>
@@ -60,29 +64,34 @@
                 <TextBlock FontSize="16" FontWeight="SemiBold" Text="SKU" />
                 <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                     <StackPanel Spacing="16">
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SKU Name" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SkuName, Mode=OneWay}" />
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE8CB;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SKU Name" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.SkuName, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
                         <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SKU Tier" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SkuTier, Mode=OneWay}" />
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE7AC;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="SKU Tier" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.SkuTier, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
                         <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Capacity" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SkuCapacity, Mode=OneWay}" />
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE95E;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Capacity" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.SkuCapacity, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
                         <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Operational State" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.OperationalState, Mode=OneWay}" />
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xEA18;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Operational State" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.OperationalState, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
                         <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="200" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Provisioning State" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProvisioningState, Mode=OneWay}" />
+                        <Grid ColumnSpacing="12"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <FontIcon Glyph="&#xE9F5;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Provisioning State" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.ProvisioningState, Mode=OneWay}" VerticalAlignment="Center" />
                         </Grid>
                     </StackPanel>
                 </Border>

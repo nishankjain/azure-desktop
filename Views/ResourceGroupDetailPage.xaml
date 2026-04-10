@@ -54,31 +54,37 @@
 
                     <Border Padding="20" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
                         <StackPanel Spacing="16">
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource Group Name" />
-                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
+                                <FontIcon Glyph="&#xE8CB;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource Group Name" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.Name, Mode=OneWay}" VerticalAlignment="Center" />
                             </Grid>
                             <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location" />
-                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Location, Mode=OneWay}" />
+                                <FontIcon Glyph="&#xE81D;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Location" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.Location, Mode=OneWay}" VerticalAlignment="Center" />
                             </Grid>
                             <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                            <Grid>
+                            <Grid ColumnSpacing="12">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="200" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" />
-                                <TextBlock Grid.Column="1" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ResourceId, Mode=OneWay}" TextWrapping="Wrap" />
+                                <FontIcon Glyph="&#xE71B;" FontSize="14" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" IsTextSelectionEnabled="True" Text="{x:Bind ViewModel.ResourceId, Mode=OneWay}" TextWrapping="Wrap" VerticalAlignment="Center" />
                             </Grid>
                         </StackPanel>
                     </Border>

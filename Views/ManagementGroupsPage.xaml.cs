@@ -34,7 +34,7 @@ public sealed partial class ManagementGroupsPage : Page
     {
         if (e.ClickedItem is SubscriptionItem item)
         {
-            Frame.Navigate(typeof(ResourceGroupsPage), item);
+            Frame.Navigate(typeof(SubscriptionDetailPage), item);
         }
     }
 }

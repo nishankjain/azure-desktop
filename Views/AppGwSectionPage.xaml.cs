@@ -771,6 +771,27 @@ public sealed partial class AppGwSectionPage : Page
         }
     }
 
+    private static readonly Dictionary<string, string> FieldIcons = new()
+    {
+        ["Name"] = "\uE8CB",
+        ["Location"] = "\uE81D",
+        ["SKU Name"] = "\uE8CB",
+        ["SKU Tier"] = "\uE7AC",
+        ["Capacity"] = "\uE95E",
+        ["Operational State"] = "\uEA18",
+        ["Provisioning State"] = "\uE9F5",
+        ["Resource ID"] = "\uE71B",
+        ["HTTP/2"] = "\uE774",
+        ["FIPS"] = "\uE72E",
+        ["Autoscale Min"] = "\uE740",
+        ["Autoscale Max"] = "\uE741",
+        ["WAF Enabled"] = "\uE83D",
+        ["Mode"] = "\uE713",
+        ["Rule Set Type"] = "\uE8FD",
+        ["Rule Set Version"] = "\uE8FD",
+        ["Firewall Policy"] = "\uE72E",
+    };
+
     private void AddPropertyCard(List<(string Label, string Value)> properties)
     {
         var stack = new StackPanel { Spacing = 16 };
@@ -786,14 +807,38 @@ public sealed partial class AppGwSectionPage : Page
                 });
             }
 
-            var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
+            var grid = new Grid { ColumnSpacing = 12 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(180) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
-            var label = new TextBlock { Text = properties[i].Label, Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"] };
-            var value = new TextBlock { Text = properties[i].Value, IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap };
-            Grid.SetColumn(value, 1);
+            var glyph = FieldIcons.GetValueOrDefault(properties[i].Label, "\uE946");
+            var icon = new FontIcon
+            {
+                Glyph = glyph,
+                FontSize = 14,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                VerticalAlignment = VerticalAlignment.Center,
+            };
 
+            var label = new TextBlock
+            {
+                Text = properties[i].Label,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(label, 1);
+
+            var value = new TextBlock
+            {
+                Text = properties[i].Value,
+                IsTextSelectionEnabled = true,
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            Grid.SetColumn(value, 2);
+
+            grid.Children.Add(icon);
             grid.Children.Add(label);
             grid.Children.Add(value);
             stack.Children.Add(grid);

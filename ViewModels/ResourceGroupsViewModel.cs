@@ -9,6 +9,7 @@ public partial class ResourceGroupItem(string name, string location)
 {
     public string Name { get; } = name;
     public string Location { get; } = location;
+    public string IconPath { get; } = "ms-appx:///Assets/Icons/resourceGroups.svg";
 }
 
 public partial class ResourceGroupsViewModel(IAzureAuthService authService) : ObservableObject
