@@ -145,44 +145,45 @@ public sealed partial class MainWindow : Window
         {
             // AppGW-specific nav
             AddNavItems(
-                CreateNavItem("Overview", "AppGwOverview", "\xE946"),
-                CreateNavItem("Backend Pools", "AppGwBackendPools", "\xE774"),
-                CreateNavItem("Backend Settings", "AppGwBackendSettings", "\xE713"),
-                CreateNavItem("Frontend IP", "AppGwFrontendIP", "\xE968"),
-                CreateNavItem("Private Link", "AppGwPrivateLink", "\xE71B"),
-                CreateNavItem("SSL Settings", "AppGwSsl", "\xE72E"),
-                CreateNavItem("Listeners", "AppGwListeners", "\xE8B5"),
-                CreateNavItem("Routing Rules", "AppGwRoutingRules", "\xE8AD"),
-                CreateNavItem("Rewrite Sets", "AppGwRewriteSets", "\xE70F"),
-                CreateNavItem("Health Probes", "AppGwHealthProbes", "\xE95E"),
-                CreateNavItem("Configuration", "AppGwConfig", "\xE713"),
-                CreateNavItem("WAF", "AppGwWaf", "\xE83D"),
-                CreateNavItem("JWT Validation", "AppGwJwt", "\xE8D7"),
-                CreateNavItem("Manage Tags", "ResourceTags", "\xE1CB"),
-                CreateNavItem("Manage Locks", "ResourceLocks", "\xE72E"));
+                CreateSvgNavItem("Overview", "AppGwOverview", "applicationGateways.svg"),
+                CreateSvgNavItem("Backend Pools", "AppGwBackendPools", "backendPools.svg"),
+                CreateSvgNavItem("Backend Settings", "AppGwBackendSettings", "backendSettings.svg"),
+                CreateSvgNavItem("Frontend IP", "AppGwFrontendIP", "frontendIP.svg"),
+                CreateSvgNavItem("Private Link", "AppGwPrivateLink", "privateLink.svg"),
+                CreateSvgNavItem("SSL Settings", "AppGwSsl", "sslSettings.svg"),
+                CreateSvgNavItem("Listeners", "AppGwListeners", "listeners.svg"),
+                CreateSvgNavItem("Routing Rules", "AppGwRoutingRules", "routingRules.svg"),
+                CreateSvgNavItem("Rewrite Sets", "AppGwRewriteSets", "rewriteSets.svg"),
+                CreateSvgNavItem("Health Probes", "AppGwHealthProbes", "healthProbes.svg"),
+                CreateSvgNavItem("Configuration", "AppGwConfig", "configuration.svg"),
+                CreateSvgNavItem("WAF", "AppGwWaf", "waf.svg"),
+                CreateSvgNavItem("JWT Validation", "AppGwJwt", "jwtValidation.svg"),
+                CreateSvgNavItem("Manage Tags", "ResourceTags", "tags.svg"),
+                CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
         }
         else if (_activeNavContext?.Resource is not null && (pageType == typeof(ResourceDetailPage) || isTagsOrLocks))
         {
+            var iconFile = Helpers.ResourceIconResolver.GetIconFileName(_activeNavContext.Resource.Type);
             AddNavItems(
-                CreateNavItem("Overview", "ResourceDetail", "\xE946"),
-                CreateNavItem("Manage Tags", "ResourceTags", "\xE1CB"),
-                CreateNavItem("Manage Locks", "ResourceLocks", "\xE72E"));
+                CreateSvgNavItem("Overview", "ResourceDetail", iconFile),
+                CreateSvgNavItem("Manage Tags", "ResourceTags", "tags.svg"),
+                CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
         }
         else if (_activeNavContext?.ResourceGroupName is not null &&
                  (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
         {
             AddNavItems(
-                CreateNavItem("Overview", "RGDetail", "\xE946"),
-                CreateNavItem("Manage Tags", "RGTags", "\xE1CB"),
-                CreateNavItem("Manage Locks", "RGLocks", "\xE72E"));
+                CreateSvgNavItem("Overview", "RGDetail", "resourceGroups.svg"),
+                CreateSvgNavItem("Manage Tags", "RGTags", "tags.svg"),
+                CreateSvgNavItem("Manage Locks", "RGLocks", "locks.svg"));
         }
         else
         {
             AddNavItems(
-                CreateNavItem("Overview", "SubscriptionDetail", "\xE946"),
-                CreateNavItem("Manage Tags", "ManageTags", "\xE1CB"),
-                CreateNavItem("Manage Locks", "ManageLocks", "\xE72E"),
-                CreateNavItem("Preview Features", "PreviewFeatures", "\xE7FC"));
+                CreateSvgNavItem("Overview", "SubscriptionDetail", "subscriptions.svg"),
+                CreateSvgNavItem("Manage Tags", "ManageTags", "tags.svg"),
+                CreateSvgNavItem("Manage Locks", "ManageLocks", "locks.svg"),
+                CreateSvgNavItem("Preview Features", "PreviewFeatures", "previewFeatures.svg"));
         }
 
         var activeTag = pageType switch
@@ -215,13 +216,18 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private static NavigationViewItem CreateNavItem(string content, string tag, string glyph)
+    private static NavigationViewItem CreateSvgNavItem(string content, string tag, string iconFileName)
     {
         return new NavigationViewItem
         {
             Content = content,
             Tag = tag,
-            Icon = new FontIcon { Glyph = glyph },
+            Icon = new ImageIcon
+            {
+                Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri($"ms-appx:///Assets/Icons/{iconFileName}")),
+                Width = 20,
+                Height = 20,
+            },
         };
     }
 

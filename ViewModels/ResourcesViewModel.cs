@@ -5,6 +5,8 @@ using AzureDesktop.Services;
 
 namespace AzureDesktop.ViewModels;
 
+using AzureDesktop.Helpers;
+
 public partial class ResourceItem(string name, string type, string location, string resourceId)
 {
     public string Name { get; } = name;
@@ -12,6 +14,7 @@ public partial class ResourceItem(string name, string type, string location, str
     public string Location { get; } = location;
     public string ResourceId { get; } = resourceId;
     public string DisplayType { get; } = HumanizeResourceType(type);
+    public string IconPath { get; } = ResourceIconResolver.GetIconPath(type);
 
     private static string HumanizeResourceType(string type)
     {

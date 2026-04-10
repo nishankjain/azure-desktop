@@ -144,16 +144,22 @@
                                             <ItemsRepeater.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:ResourceItem">
                                                     <Border Margin="0,2" Padding="12,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6" PointerPressed="Resource_PointerPressed" Tag="{x:Bind}">
-                                                        <Grid>
+                                                        <Grid ColumnSpacing="10">
                                                             <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
-                                                            <StackPanel Spacing="2">
+                                                            <Image Width="24" Height="24" VerticalAlignment="Center">
+                                                                <Image.Source>
+                                                                    <SvgImageSource UriSource="{x:Bind IconPath}" />
+                                                                </Image.Source>
+                                                            </Image>
+                                                            <StackPanel Grid.Column="1" Spacing="2">
                                                                 <TextBlock FontWeight="SemiBold" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
                                                                 <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Location}" />
                                                             </StackPanel>
-                                                            <FontIcon Grid.Column="1" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
+                                                            <FontIcon Grid.Column="2" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Glyph="&#xE76C;" VerticalAlignment="Center" />
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
