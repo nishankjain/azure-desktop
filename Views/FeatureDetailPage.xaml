@@ -37,7 +37,6 @@
             </StackPanel>
 
             <!-- Messages -->
-            <InfoBar IsClosable="True" IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" Severity="Success" />
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
 
             <!-- Details -->

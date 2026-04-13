@@ -24,7 +24,7 @@ public enum AppGwSection
     JwtValidation,
 }
 
-public partial class AppGwViewModel(IAzureAuthService authService, IApplicationGatewayService gatewayService) : ObservableObject
+public partial class AppGwViewModel(IAzureAuthService authService, IApplicationGatewayService gatewayService, OperationManager operationManager) : ObservableObject
 {
     private ApplicationGatewayData? _data;
 
@@ -401,11 +401,13 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
         IsSaving = true;
         ErrorMessage = null;
         SaveMessage = null;
+        var op = operationManager.Begin(actionDescription, "Saving", "Saved", Name, "Application Gateway", ResourceId);
 
         try
         {
             await gatewayService.UpdateAsync(ResourceId, _data, cancellationToken);
             SaveMessage = actionDescription;
+            op.Complete();
 
             // Reload to get fresh state
             await LoadAsync(ResourceId, cancellationToken);
@@ -414,6 +416,7 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to save: {ex.Message}";
+            op.Fail(ex.Message);
             return false;
         }
         finally

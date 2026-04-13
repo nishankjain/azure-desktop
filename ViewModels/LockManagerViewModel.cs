@@ -54,7 +54,7 @@ public partial class LockEntry : ObservableObject
     public void CancelDelete() => IsConfirmingDelete = false;
 }
 
-public partial class LockManagerViewModel(ILockService lockService) : ObservableObject
+public partial class LockManagerViewModel(ILockService lockService, OperationManager operationManager) : ObservableObject
 {
     private string? _resourceId;
 
@@ -128,6 +128,7 @@ public partial class LockManagerViewModel(ILockService lockService) : Observable
         IsSaving = true;
         ErrorMessage = null;
         SuccessMessage = null;
+        var op = operationManager.Begin("Create Lock", "Creating", "Created", NewLockName.Trim(), resourceId: _resourceId ?? string.Empty);
 
         try
         {
@@ -149,12 +150,14 @@ public partial class LockManagerViewModel(ILockService lockService) : Observable
             });
 
             SuccessMessage = $"Lock '{NewLockName.Trim()}' created.";
+            op.Complete();
             NewLockName = string.Empty;
             NewLockNotes = string.Empty;
             SelectedLockLevelIndex = 0;
         }
         catch (Exception ex)
         {
+            op.Fail(ex.Message);
             ErrorMessage = $"Failed to create lock: {ex.Message}";
         }
         finally
@@ -169,6 +172,7 @@ public partial class LockManagerViewModel(ILockService lockService) : Observable
         IsSaving = true;
         ErrorMessage = null;
         SuccessMessage = null;
+        var op = operationManager.Begin("Update Lock", "Updating", "Updated", entry.Name, resourceId: _resourceId ?? string.Empty);
 
         try
         {
@@ -184,9 +188,11 @@ public partial class LockManagerViewModel(ILockService lockService) : Observable
             entry.Notes = entry.EditNotes.Trim();
             entry.IsEditing = false;
             SuccessMessage = $"Lock '{entry.Name}' updated.";
+            op.Complete();
         }
         catch (Exception ex)
         {
+            op.Fail(ex.Message);
             ErrorMessage = $"Failed to update lock: {ex.Message}";
         }
         finally
@@ -201,15 +207,18 @@ public partial class LockManagerViewModel(ILockService lockService) : Observable
         IsSaving = true;
         ErrorMessage = null;
         SuccessMessage = null;
+        var op = operationManager.Begin("Delete Lock", "Deleting", "Deleted", entry.Name, resourceId: _resourceId ?? string.Empty);
 
         try
         {
             await lockService.DeleteLockAsync(entry.LockResourceId, cancellationToken);
             Locks.Remove(entry);
             SuccessMessage = $"Lock '{entry.Name}' deleted.";
+            op.Complete();
         }
         catch (Exception ex)
         {
+            op.Fail(ex.Message);
             ErrorMessage = $"Failed to delete lock: {ex.Message}";
         }
         finally

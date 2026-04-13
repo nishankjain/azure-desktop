@@ -28,7 +28,6 @@
             </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,0" Spacing="4">
-            <InfoBar IsClosable="True" IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" Severity="Success" />
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
         </StackPanel>
 
@@ -39,7 +38,6 @@
                     <TextBox Width="160" PlaceholderText="Key" Text="{x:Bind ViewModel.NewTagKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <TextBox Width="200" PlaceholderText="Value" Text="{x:Bind ViewModel.NewTagValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     <Button Command="{x:Bind ViewModel.AddTagCommand}" Content="Add" Style="{ThemeResource AccentButtonStyle}" />
-                    <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsSaving, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay}" />
                 </StackPanel>
             </StackPanel>
         </Border>

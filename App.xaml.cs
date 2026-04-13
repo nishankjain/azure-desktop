@@ -24,6 +24,7 @@ public partial class App : Application
         services.AddSingleton<ILockService, LockService>();
         services.AddSingleton<IFeatureService, FeatureService>();
         services.AddSingleton<IResourceProviderService, ResourceProviderService>();
+        services.AddSingleton<OperationManager>();
 
         // ViewModels
         services.AddTransient<SubscriptionsViewModel>();

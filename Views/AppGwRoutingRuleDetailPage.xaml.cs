@@ -14,7 +14,6 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
     private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private string _ruleName = "";
-    private DispatcherTimer? _autoDismissTimer;
 
     // Form controls
     private RadioButton? _ruleTypeBasic;
@@ -1052,16 +1051,7 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
             rule.UrlPathMapId = null;
         }
 
-        ShowSaving();
-        var saved = await ViewModel.SaveChangesAsync($"Updated rule '{_ruleName}'.");
-        if (saved)
-        {
-            ShowStatus($"Rule '{_ruleName}' updated successfully.");
-        }
-        else
-        {
-            ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
-        }
+        await ViewModel.SaveChangesAsync($"Updated rule '{_ruleName}'.");
 
         RenderForm();
     }
@@ -1082,29 +1072,4 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         });
     }
 
-    private void ShowSaving()
-    {
-        StatusSpinner.Visibility = Visibility.Visible;
-        StatusIcon.Visibility = Visibility.Collapsed;
-        StatusText.Text = "Saving to Azure...";
-        StatusPanel.Visibility = Visibility.Visible;
-    }
-
-    private void ShowStatus(string message, bool isError = false)
-    {
-        _autoDismissTimer?.Stop();
-        StatusSpinner.Visibility = Visibility.Collapsed;
-        StatusIcon.Visibility = Visibility.Visible;
-        StatusIcon.Glyph = isError ? "\uEA39" : "\uE73E";
-        StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[isError ? "SystemFillColorCriticalBrush" : "SystemFillColorSuccessBrush"];
-        StatusText.Text = message;
-        StatusPanel.Visibility = Visibility.Visible;
-
-        if (!isError)
-        {
-            _autoDismissTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
-            _autoDismissTimer.Tick += (_, _) => { StatusPanel.Visibility = Visibility.Collapsed; _autoDismissTimer.Stop(); };
-            _autoDismissTimer.Start();
-        }
-    }
 }

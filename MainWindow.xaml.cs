@@ -1,3 +1,4 @@
+using AzureDesktop.Services;
 using AzureDesktop.ViewModels;
 using AzureDesktop.Views;
 using Microsoft.UI.Xaml;
@@ -13,6 +14,8 @@ public sealed partial class MainWindow : Window
     private NavigationContext? _activeNavContext;
     private readonly List<NavigationViewItem> _contextNavItems = [];
 
+    public OperationManager OperationMgr { get; } = App.GetService<OperationManager>();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -20,11 +23,108 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
+        // Configure caption buttons to match title bar
+        var titleBar = AppWindow.TitleBar;
+        AppTitleBar.Padding = new Microsoft.UI.Xaml.Thickness(0, 0, titleBar.RightInset, 0);
+
         ContentFrame.Navigated += ContentFrame_Navigated;
         NavView.DisplayModeChanged += NavView_DisplayModeChanged;
         SizeChanged += MainWindow_SizeChanged;
 
+        // Update badge when operations change
+        OperationMgr.Operations.CollectionChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdateBadge);
+        OperationMgr.OperationUpdated += () => DispatcherQueue.TryEnqueue(UpdateBadge);
+
+        OperationsList.ItemsSource = OperationMgr.Operations;
+
         ContentFrame.Navigate(typeof(HomePage));
+    }
+
+    private OperationEntry? _lastTrackedOperation;
+    private Microsoft.UI.Xaml.DispatcherTimer? _statusHideTimer;
+
+    private void UpdateBadge()
+    {
+        var unread = OperationMgr.UnreadCount;
+        if (unread > 0)
+        {
+            OperationBadge.Value = unread;
+            OperationBadge.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            OperationBadge.Visibility = Visibility.Collapsed;
+        }
+
+        NoOperationsText.Visibility = OperationMgr.Operations.Count == 0
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        UpdateInlineStatus();
+    }
+
+    private void UpdateInlineStatus()
+    {
+        var activeCount = OperationMgr.ActiveCount;
+        var active = OperationMgr.LatestActive;
+
+        if (active is not null)
+        {
+            _lastTrackedOperation = active;
+            _statusHideTimer?.Stop();
+            InlineSpinner.Visibility = Visibility.Visible;
+            InlineResultIcon.Visibility = Visibility.Collapsed;
+
+            if (activeCount > 1)
+            {
+                InlineStatusText.Text = $"{active.InProgressText} {active.ResourceName} (+{activeCount - 1} more)";
+            }
+            else
+            {
+                InlineStatusText.Text = $"{active.InProgressText} {active.ResourceName}";
+            }
+
+            InlineStatusText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+            InlineStatusBorder.Visibility = Visibility.Visible;
+        }
+        else if (_lastTrackedOperation is not null && _lastTrackedOperation.Status != Services.OperationStatus.InProgress)
+        {
+            InlineSpinner.Visibility = Visibility.Collapsed;
+            InlineResultIcon.Visibility = Visibility.Visible;
+
+            if (_lastTrackedOperation.Status == Services.OperationStatus.Succeeded)
+            {
+                InlineResultIcon.Glyph = "\uE73E";
+                InlineResultIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
+                InlineStatusText.Text = $"{_lastTrackedOperation.CompletedText} {_lastTrackedOperation.ResourceName}";
+                InlineStatusText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+            }
+            else
+            {
+                InlineResultIcon.Glyph = "\uEA39";
+                InlineResultIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+                InlineStatusText.Text = $"Failed to {_lastTrackedOperation.OperationName.ToLower()} {_lastTrackedOperation.ResourceName}";
+                InlineStatusText.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
+            }
+
+            InlineStatusBorder.Visibility = Visibility.Visible;
+
+            _statusHideTimer?.Stop();
+            _statusHideTimer = new Microsoft.UI.Xaml.DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+            _statusHideTimer.Tick += (_, _) =>
+            {
+                _statusHideTimer.Stop();
+                InlineStatusBorder.Visibility = Visibility.Collapsed;
+                _lastTrackedOperation = null;
+            };
+            _statusHideTimer.Start();
+        }
+    }
+
+    private void NotificationFlyout_Opened(object sender, object e)
+    {
+        OperationMgr.MarkAllRead();
+        UpdateBadge();
     }
 
     private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
@@ -61,6 +161,11 @@ public sealed partial class MainWindow : Window
         BackButton.Visibility = ContentFrame.CanGoBack
             ? Visibility.Visible
             : Visibility.Collapsed;
+
+        // Hide home button when already on home page
+        HomeButton.Visibility = e.SourcePageType == typeof(HomePage)
+            ? Visibility.Collapsed
+            : Visibility.Visible;
 
         // Trim back stack to prevent unbounded memory growth
         while (ContentFrame.BackStack.Count > 5)

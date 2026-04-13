@@ -20,7 +20,7 @@ public partial class ResourceProviderEntry : ObservableObject
     public int ResourceTypeCount => ResourceTypes.Count;
 }
 
-public partial class ResourceProvidersViewModel(IResourceProviderService resourceProviderService) : ObservableObject
+public partial class ResourceProvidersViewModel(IResourceProviderService resourceProviderService, OperationManager operationManager) : ObservableObject
 {
     private readonly List<ResourceProviderEntry> _allProviders = [];
     private string? _subscriptionId;
@@ -130,15 +130,18 @@ public partial class ResourceProvidersViewModel(IResourceProviderService resourc
         }
 
         entry.IsUpdating = true;
+        var op = operationManager.Begin("Register Provider", "Registering", "Registered", entry.Namespace, "Resource Provider");
 
         try
         {
             await resourceProviderService.RegisterAsync(_subscriptionId, entry.Namespace, cancellationToken);
             entry.RegistrationState = "Registered";
+            op.Complete();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to register {entry.Namespace}: {ex.Message}";
+            op.Fail(ex.Message);
         }
         finally
         {
@@ -154,15 +157,18 @@ public partial class ResourceProvidersViewModel(IResourceProviderService resourc
         }
 
         entry.IsUpdating = true;
+        var op = operationManager.Begin("Unregister Provider", "Unregistering", "Unregistered", entry.Namespace, "Resource Provider");
 
         try
         {
             await resourceProviderService.UnregisterAsync(_subscriptionId, entry.Namespace, cancellationToken);
             entry.RegistrationState = "NotRegistered";
+            op.Complete();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Failed to unregister {entry.Namespace}: {ex.Message}";
+            op.Fail(ex.Message);
         }
         finally
         {

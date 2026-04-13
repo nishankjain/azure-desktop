@@ -31,8 +31,6 @@ public sealed partial class AppGwSectionPage : Page
             _navCtx = ctx;
             _section = section;
             SectionTitle = SectionToTitle(section);
-            ClearNotifications();
-            
 
             _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
             _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
@@ -455,73 +453,18 @@ public sealed partial class AppGwSectionPage : Page
             var deleted = ViewModel.DeleteItem(_section, name);
             if (deleted)
             {
-                ShowSaving();
                 try
                 {
-                    var saved = await ViewModel.SaveChangesAsync($"Deleted '{name}'.");
-                    if (saved)
-                    {
-                        ShowStatus($"Deleted '{name}' successfully.");
-                    }
-                    else
-                    {
-                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to delete.", isError: true);
-                    }
+                    await ViewModel.SaveChangesAsync($"Deleted '{name}'.");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    ShowStatus($"Error: {ex.Message}", isError: true);
                 }
 
                 
                 RenderSection();
             }
         }
-    }
-
-    private DispatcherTimer? _autoDismissTimer;
-
-    private void ShowStatus(string message, bool isError = false)
-    {
-        _autoDismissTimer?.Stop();
-        StatusSpinner.Visibility = Visibility.Collapsed;
-        StatusIcon.Visibility = Visibility.Visible;
-
-        if (isError)
-        {
-            StatusIcon.Glyph = "\uEA39";
-            StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
-        }
-        else
-        {
-            StatusIcon.Glyph = "\uE73E";
-            StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorSuccessBrush"];
-        }
-
-        StatusText.Text = message;
-        StatusPanel.Visibility = Visibility.Visible;
-
-        if (!isError)
-        {
-            _autoDismissTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
-            _autoDismissTimer.Tick += (_, _) => { StatusPanel.Visibility = Visibility.Collapsed; _autoDismissTimer.Stop(); };
-            _autoDismissTimer.Start();
-        }
-    }
-
-    private void ShowSaving()
-    {
-        _autoDismissTimer?.Stop();
-        StatusSpinner.Visibility = Visibility.Visible;
-        StatusIcon.Visibility = Visibility.Collapsed;
-        StatusText.Text = "Saving to Azure...";
-        StatusPanel.Visibility = Visibility.Visible;
-    }
-
-    private void ClearNotifications()
-    {
-        _autoDismissTimer?.Stop();
-        StatusPanel.Visibility = Visibility.Collapsed;
     }
 
     private void EditRow_Click(object sender, RoutedEventArgs e)
@@ -556,30 +499,16 @@ public sealed partial class AppGwSectionPage : Page
         var editedValues = await ShowFieldDialogAsync($"Edit: {originalName}", fields, values, isEdit: true);
         if (editedValues is not null)
         {
-            ShowSaving();
             try
             {
                 var edited = ViewModel.EditItem(_section, originalName, editedValues);
                 if (edited)
                 {
-                    var saved = await ViewModel.SaveChangesAsync($"Updated '{originalName}'.");
-                    if (saved)
-                    {
-                        ShowStatus($"Updated '{originalName}' successfully.");
-                    }
-                    else
-                    {
-                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
-                    }
-                }
-                else
-                {
-                    ShowStatus($"Could not edit '{originalName}'.", isError: true);
+                    await ViewModel.SaveChangesAsync($"Updated '{originalName}'.");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                ShowStatus($"Error: {ex.Message}", isError: true);
             }
 
             
@@ -596,30 +525,16 @@ public sealed partial class AppGwSectionPage : Page
         if (editedValues is not null)
         {
             var name = editedValues.GetValueOrDefault("Name") ?? "";
-            ShowSaving();
             try
             {
                 var added = ViewModel.AddItem(_section, editedValues);
                 if (added)
                 {
-                    var saved = await ViewModel.SaveChangesAsync($"Added '{name}'.");
-                    if (saved)
-                    {
-                        ShowStatus($"Added '{name}' successfully.");
-                    }
-                    else
-                    {
-                        ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
-                    }
-                }
-                else
-                {
-                    ShowStatus("Could not add item. Check required fields.", isError: true);
+                    await ViewModel.SaveChangesAsync($"Added '{name}'.");
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                ShowStatus($"Error: {ex.Message}", isError: true);
             }
 
             

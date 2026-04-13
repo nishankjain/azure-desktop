@@ -3,7 +3,7 @@ using AzureDesktop.Services;
 
 namespace AzureDesktop.ViewModels;
 
-public partial class FeatureDetailViewModel(IFeatureService featureService) : ObservableObject
+public partial class FeatureDetailViewModel(IFeatureService featureService, OperationManager operationManager) : ObservableObject
 {
     [ObservableProperty]
     public partial string FeatureName { get; set; } = string.Empty;
@@ -64,15 +64,19 @@ public partial class FeatureDetailViewModel(IFeatureService featureService) : Ob
         {
             if (State == "Registered")
             {
+                var op = operationManager.Begin("Unregister Feature", "Unregistering", "Unregistered", FeatureName, "Feature", ResourceId);
                 await featureService.UnregisterAsync(subscriptionId, ProviderNamespace, FeatureName);
                 State = "NotRegistered";
                 SuccessMessage = $"Feature '{FeatureName}' unregistered.";
+                op.Complete();
             }
             else
             {
+                var op = operationManager.Begin("Register Feature", "Registering", "Registered", FeatureName, "Feature", ResourceId);
                 await featureService.RegisterAsync(subscriptionId, ProviderNamespace, FeatureName);
                 State = "Registered";
                 SuccessMessage = $"Feature '{FeatureName}' registered.";
+                op.Complete();
             }
         }
         catch (Exception ex)

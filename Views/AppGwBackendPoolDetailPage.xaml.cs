@@ -14,7 +14,6 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
     private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private string _poolName = "";
-    private DispatcherTimer? _autoDismissTimer;
     private List<TargetRow> _allTargets = [];
     private List<(TargetRow Row, ListViewItem Item)> _cachedItems = [];
     private DispatcherTimer? _searchDebounceTimer;
@@ -228,43 +227,9 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
 
     private async void Save_Click(object sender, RoutedEventArgs e)
     {
-        ShowSaving();
-        var saved = await ViewModel.SaveChangesAsync($"Updated pool '{_poolName}'.");
-        if (saved)
-        {
-            ShowStatus($"Pool '{_poolName}' updated successfully.");
-            LoadTargets();
-            RenderRules();
-        }
-        else
-        {
-            ShowStatus(ViewModel.ErrorMessage ?? "Failed to save.", isError: true);
-        }
+        await ViewModel.SaveChangesAsync($"Updated pool '{_poolName}'.");
+        LoadTargets();
+        RenderRules();
     }
 
-    private void ShowSaving()
-    {
-        StatusSpinner.Visibility = Visibility.Visible;
-        StatusIcon.Visibility = Visibility.Collapsed;
-        StatusText.Text = "Saving to Azure...";
-        StatusPanel.Visibility = Visibility.Visible;
-    }
-
-    private void ShowStatus(string message, bool isError = false)
-    {
-        _autoDismissTimer?.Stop();
-        StatusSpinner.Visibility = Visibility.Collapsed;
-        StatusIcon.Visibility = Visibility.Visible;
-        StatusIcon.Glyph = isError ? "\uEA39" : "\uE73E";
-        StatusIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[isError ? "SystemFillColorCriticalBrush" : "SystemFillColorSuccessBrush"];
-        StatusText.Text = message;
-        StatusPanel.Visibility = Visibility.Visible;
-
-        if (!isError)
-        {
-            _autoDismissTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
-            _autoDismissTimer.Tick += (_, _) => { StatusPanel.Visibility = Visibility.Collapsed; _autoDismissTimer.Stop(); };
-            _autoDismissTimer.Start();
-        }
-    }
 }

@@ -13,26 +13,14 @@
 
     <StackPanel MinWidth="480" MaxWidth="560" Spacing="12">
 
-        <!-- Loading / Saving -->
+        <!-- Loading -->
         <StackPanel Orientation="Horizontal" Spacing="8">
             <ProgressRing
                 Width="16"
                 Height="16"
                 IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
                 Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-            <ProgressRing
-                Width="16"
-                Height="16"
-                IsActive="{x:Bind ViewModel.IsSaving, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay}" />
         </StackPanel>
-
-        <!-- Success message -->
-        <InfoBar
-            IsClosable="True"
-            IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}"
-            Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}"
-            Severity="Success" />
 
         <!-- Error message -->
         <InfoBar

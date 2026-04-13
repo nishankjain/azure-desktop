@@ -28,7 +28,6 @@
             </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,0" Spacing="4">
-            <InfoBar IsClosable="True" IsOpen="{x:Bind ViewModel.SuccessMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.SuccessMessage, Mode=OneWay}" Severity="Success" />
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
         </StackPanel>
 
@@ -42,7 +41,6 @@
                         <ComboBoxItem Content="ReadOnly" />
                     </ComboBox>
                     <Button Command="{x:Bind ViewModel.AddLockCommand}" Content="Add" Style="{ThemeResource AccentButtonStyle}" />
-                    <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsSaving, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsSaving, Mode=OneWay}" />
                 </StackPanel>
                 <TextBox PlaceholderText="Notes (optional)" Text="{x:Bind ViewModel.NewLockNotes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
