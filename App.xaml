@@ -19,13 +19,68 @@
             <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
             <x:Double x:Key="NavigationViewItemOnLeftIconBoxWidth">20</x:Double>
             <x:Double x:Key="NavigationViewItemOnLeftIconBoxHeight">20</x:Double>
-            <x:Double x:Key="BreadcrumbBarChevronFontSize">18</x:Double>
-            <Thickness x:Key="BreadcrumbBarChevronPadding">8,6,8,0</Thickness>
+            <x:Double x:Key="BreadcrumbBarChevronFontSize">14</x:Double>
+            <Thickness x:Key="BreadcrumbBarChevronPadding">12,6,12,0</Thickness>
             <Thickness x:Key="BreadcrumbBarItemThemePadding">0,0,14,0</Thickness>
             <Thickness x:Key="BreadcrumbBarChevronItemThemePadding">0,0,14,0</Thickness>
             <SolidColorBrush x:Key="BreadcrumbBarForegroundBrush" Color="{ThemeResource TextFillColorTertiary}" />
+            <SolidColorBrush x:Key="BreadcrumbBarNormalForegroundBrush" Color="{ThemeResource TextFillColorTertiary}" />
             <SolidColorBrush x:Key="BreadcrumbBarHoverForegroundBrush" Color="{ThemeResource TextFillColorPrimary}" />
             <SolidColorBrush x:Key="BreadcrumbBarCurrentNormalForegroundBrush" Color="{ThemeResource TextFillColorPrimary}" />
+
+            <!-- Ellipsis button styled as plain text with no background highlight, followed by a chevron -->
+            <Style x:Key="BreadcrumbEllipsisStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource BreadcrumbBarForegroundBrush}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal" />
+                                        <VisualState x:Name="PointerOver">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="EllipsisText" Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BreadcrumbBarHoverForegroundBrush}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="EllipsisText" Storyboard.TargetProperty="Foreground">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource BreadcrumbBarHoverForegroundBrush}" />
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Disabled" />
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <TextBlock x:Name="EllipsisText"
+                                           Text="{TemplateBinding Content}"
+                                           FontSize="28" FontWeight="SemiBold"
+                                           Foreground="{TemplateBinding Foreground}"
+                                           VerticalAlignment="Center">
+                                    <TextBlock.RenderTransform>
+                                        <TranslateTransform Y="-6" />
+                                    </TextBlock.RenderTransform>
+                                </TextBlock>
+                                <FontIcon x:Name="ChevronIcon"
+                                          Glyph="&#xE974;"
+                                          FontSize="{ThemeResource BreadcrumbBarChevronFontSize}"
+                                          Foreground="{ThemeResource BreadcrumbBarForegroundBrush}"
+                                          Margin="{ThemeResource BreadcrumbBarChevronPadding}"
+                                          VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
             <!-- Card ListViewItem: rounded corners, smooth animated hover -->
             <Style x:Key="CardListViewItem" TargetType="ListViewItem">

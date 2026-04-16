@@ -23,6 +23,8 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
+        AppWindow.SetIcon(System.IO.Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Assets", "AppIcon.ico"));
+
         // Configure caption buttons to match title bar
         var titleBar = AppWindow.TitleBar;
         AppTitleBar.Padding = new Microsoft.UI.Xaml.Thickness(0, 0, titleBar.RightInset, 0);

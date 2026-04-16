@@ -15,6 +15,8 @@ public sealed partial class AppGwSectionPage : Page
     private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private AppGwSection _section;
+    private ListView? _dataListView;
+    private readonly HashSet<string> _selectedForDelete = [];
 
     public AppGwSectionPage()
     {
@@ -68,6 +70,7 @@ public sealed partial class AppGwSectionPage : Page
         ContentArea.RowDefinitions.Clear();
         _currentCollection = null;
         _currentColumns = null;
+        _selectedForDelete.Clear();
         _confirmDeleteName = null;
         _isCollectionSection = false;
         SearchAddPanel.Visibility = Visibility.Collapsed;
@@ -249,17 +252,7 @@ public sealed partial class AppGwSectionPage : Page
 
         if (_isCollectionSection)
         {
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var actionsHeader = new TextBlock
-            {
-                Text = "Actions",
-                FontSize = 12,
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                Padding = new Thickness(8, 4, 8, 4),
-                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-            };
-            Grid.SetColumn(actionsHeader, columns.Count);
-            headerGrid.Children.Add(actionsHeader);
+            // No separate actions column - actions are in the toolbar
         }
 
         Grid.SetRow(headerGrid, 0);
@@ -274,12 +267,18 @@ public sealed partial class AppGwSectionPage : Page
         Grid.SetRow(divider, 1);
         tableGrid.Children.Add(divider);
 
-        // Data rows (ListView provides UI virtualization)
+        // Data rows
         var dataListView = new ListView
         {
             SelectionMode = ListViewSelectionMode.None,
+            IsItemClickEnabled = (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules),
             Padding = new Thickness(12, 4, 12, 12),
         };
+        if (dataListView.IsItemClickEnabled)
+        {
+            dataListView.ItemClick += DataListView_ItemClick;
+        }
+        _dataListView = dataListView;
 
         foreach (var row in rows)
         {
@@ -325,15 +324,28 @@ public sealed partial class AppGwSectionPage : Page
             else
             {
                 // Normal data row
-                var rowGrid = new Grid { Padding = new Thickness(0, 6, 0, 6) };
+                var rowGrid = new Grid { Padding = new Thickness(0, 6, 0, 6), Tag = rowName };
 
-                // Make rows clickable for sections with detail pages
-                if (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules)
+                if (_isCollectionSection)
                 {
-                    rowGrid.PointerPressed += (s, _) => NavigateToSubDetail(rowName);
-                    rowGrid.PointerEntered += (s, _) => ((Grid)s).Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"];
-                    rowGrid.PointerExited += (s, _) => ((Grid)s).Background = null;
+                    // Checkbox column for multi-select deletion
+                    rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                    var cb = new CheckBox
+                    {
+                        Tag = rowName,
+                        IsChecked = _selectedForDelete.Contains(rowName),
+                        MinWidth = 0,
+                        Padding = new Thickness(0),
+                        Margin = new Thickness(0, 0, 4, 0),
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
+                    cb.Checked += RowCheckBox_Changed;
+                    cb.Unchecked += RowCheckBox_Changed;
+                    Grid.SetColumn(cb, 0);
+                    rowGrid.Children.Add(cb);
                 }
+
+                var colOffset = _isCollectionSection ? 1 : 0;
 
                 for (int c = 0; c < columns.Count; c++)
                 {
@@ -352,46 +364,8 @@ public sealed partial class AppGwSectionPage : Page
                     else
                         cell.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
 
-                    Grid.SetColumn(cell, c);
+                    Grid.SetColumn(cell, c + colOffset);
                     rowGrid.Children.Add(cell);
-                }
-
-                // Action buttons
-                if (_isCollectionSection)
-                {
-                    rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                    var actionsPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
-
-                    var editFields = AppGwViewModel.GetEditableFields(_section);
-                    if (editFields.Count > 0)
-                    {
-                        var editBtn = new Button
-                        {
-                            Width = 32, Height = 32, Padding = new Thickness(0),
-                            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                            BorderThickness = new Thickness(0),
-                            Tag = rowName,
-                        };
-                        editBtn.Content = new FontIcon { Glyph = "\uE70F", FontSize = 14 };
-                        ToolTipService.SetToolTip(editBtn, "Edit");
-                        editBtn.Click += EditRow_Click;
-                        actionsPanel.Children.Add(editBtn);
-                    }
-
-                    var deleteBtn = new Button
-                    {
-                        Width = 32, Height = 32, Padding = new Thickness(0),
-                        Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                        BorderThickness = new Thickness(0),
-                        Tag = rowName,
-                    };
-                    deleteBtn.Content = new FontIcon { Glyph = "\uE711", FontSize = 14 };
-                    ToolTipService.SetToolTip(deleteBtn, "Delete");
-                    deleteBtn.Click += DeleteRow_Click;
-
-                    actionsPanel.Children.Add(deleteBtn);
-                    Grid.SetColumn(actionsPanel, columns.Count);
-                    rowGrid.Children.Add(actionsPanel);
                 }
 
                 dataListView.Items.Add(rowGrid);
@@ -427,6 +401,65 @@ public sealed partial class AppGwSectionPage : Page
         else if (_section == AppGwSection.RoutingRules)
         {
             Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), (_navCtx, itemName));
+        }
+    }
+
+    private void RowCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (sender is CheckBox { Tag: string name })
+        {
+            if (((CheckBox)sender).IsChecked == true)
+                _selectedForDelete.Add(name);
+            else
+                _selectedForDelete.Remove(name);
+
+            DeleteSelectedButton.IsEnabled = _selectedForDelete.Count > 0;
+        }
+    }
+
+    private void DeleteButton_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        DeleteSelectedButton.Background = DeleteSelectedButton.IsEnabled
+            ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 196, 43, 28))
+            : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(68, 196, 43, 28));
+    }
+
+    private void DataListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is Grid { Tag: string name })
+        {
+            NavigateToSubDetail(name);
+        }
+    }
+
+    private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedForDelete.Count == 0) return;
+
+        var selectedNames = _selectedForDelete.ToList();
+        var deleted = false;
+
+        foreach (var name in selectedNames)
+        {
+            if (ViewModel.DeleteItem(_section, name))
+            {
+                deleted = true;
+            }
+        }
+
+        if (deleted)
+        {
+            var desc = selectedNames.Count == 1
+                ? $"Deleted '{selectedNames[0]}'."
+                : $"Deleted {selectedNames.Count} items.";
+            try
+            {
+                await ViewModel.SaveChangesAsync(desc);
+            }
+            catch { }
+
+            _selectedForDelete.Clear();
+            RenderSection();
         }
     }
 

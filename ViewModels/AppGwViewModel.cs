@@ -201,13 +201,20 @@ public partial class AppGwViewModel(IAzureAuthService authService, IApplicationG
         if (_data is null) return;
         foreach (var pool in _data.BackendAddressPools)
         {
-            var associatedRules = _data.RequestRoutingRules
+            // Count direct routing rule references
+            var directRules = _data.RequestRoutingRules
                 .Count(r => SubResourceName(r.BackendAddressPoolId) == pool.Name);
+
+            // Count URL path map references
+            var pathMapRules = _data.UrlPathMaps
+                .Count(m => SubResourceName(m.DefaultBackendAddressPoolId) == pool.Name
+                    || (m.PathRules?.Any(pr => SubResourceName(pr.BackendAddressPoolId) == pool.Name) ?? false));
+
             BackendPools.Add(new Dictionary<string, string>
             {
                 ["Name"] = pool.Name ?? "",
                 ["Targets"] = (pool.BackendAddresses?.Count ?? 0).ToString(),
-                ["Associated Rules"] = associatedRules.ToString(),
+                ["Associated Rules"] = (directRules + pathMapRules).ToString(),
             });
         }
     }

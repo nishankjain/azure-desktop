@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,8" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
-                <Button x:Name="EllipsisButton" Visibility="Collapsed" Background="Transparent" BorderThickness="0" Padding="4,0,12,0" VerticalAlignment="Center" FontSize="28" FontWeight="SemiBold" Content="..." />
+                <Button x:Name="EllipsisButton" Visibility="Collapsed" Style="{StaticResource BreadcrumbEllipsisStyle}" Content="..." />
                 <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
                     <BreadcrumbBar.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
@@ -29,10 +29,22 @@
         <Grid Grid.Row="1">
         </Grid>
 
-        <StackPanel x:Name="SearchAddPanel" Grid.Row="2" Margin="0,8,0,0" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+        <Grid x:Name="SearchAddPanel" Grid.Row="2" Margin="0,8,0,0" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <TextBox x:Name="SearchBox" Width="300" PlaceholderText="Search by name..." TextChanged="SearchBox_TextChanged" />
-            <Button x:Name="AddNewButton" Click="AddNew_Click" Content="Add New" Style="{ThemeResource AccentButtonStyle}" />
-        </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <Button x:Name="AddNewButton" Click="AddNew_Click" Style="{ThemeResource AccentButtonStyle}" ToolTipService.ToolTip="Add" AutomationProperties.Name="Add">
+                    <FontIcon FontSize="14" Glyph="&#xE710;" />
+                </Button>
+                <Button x:Name="DeleteSelectedButton" Click="DeleteSelected_Click" IsEnabled="False" ToolTipService.ToolTip="Delete selected" AutomationProperties.Name="Delete" IsEnabledChanged="DeleteButton_IsEnabledChanged" Background="#44C42B1C">
+                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <!-- Row 3 fills remaining space - ContentArea renders the table here -->
         <Grid x:Name="ContentArea" Grid.Row="3" Margin="0,8,0,0" />
