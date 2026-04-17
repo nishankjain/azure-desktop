@@ -1,4 +1,3 @@
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +8,6 @@ namespace AzureDesktop.Views;
 public sealed partial class ResourceProvidersPage : Page
 {
     public ResourceProvidersViewModel ViewModel { get; }
-
-    private BreadcrumbHelper? _breadcrumbHelper;
     private SubscriptionItem? _subItem;
 
     public ResourceProvidersPage()
@@ -23,29 +20,19 @@ public sealed partial class ResourceProvidersPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is SubscriptionItem sub)
+        if (e.Parameter is NavigationContext ctx)
         {
-            _subItem = sub;
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
-            _breadcrumbHelper.Add("Resource Providers", () => { });
-            _breadcrumbHelper.Apply();
+            _subItem = ctx.Subscription;
 
-            await ViewModel.LoadProvidersAsync(sub.Id);
+            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId);
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void Provider_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is ResourceProviderEntry entry && _subItem is not null)
         {
-            Frame.Navigate(typeof(ResourceProviderDetailPage), (entry, _subItem));
+            Frame.Navigate(typeof(ResourceProviderDetailPage), new NavigationContext(_subItem, ResourceProvider: entry));
         }
     }
 

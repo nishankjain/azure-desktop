@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,8 +10,6 @@ public sealed partial class AppGwSectionPage : Page
 {
     public AppGwViewModel ViewModel { get; }
     public string SectionTitle { get; private set; } = "";
-
-    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private AppGwSection _section;
     private ListView? _dataListView;
@@ -28,19 +25,11 @@ public sealed partial class AppGwSectionPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (NavigationContext ctx, AppGwSection section))
+        if (e.Parameter is NavigationContext ctx && ctx.Section is not null)
         {
             _navCtx = ctx;
-            _section = section;
-            SectionTitle = SectionToTitle(section);
-
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
-            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx! with { Resource = null }));
-            _breadcrumbHelper.Add(ctx.Resource?.SingularType ?? "Resource", () => Frame.Navigate(typeof(ResourceDetailPage), _navCtx));
-            _breadcrumbHelper.Add(SectionTitle, () => { });
-            _breadcrumbHelper.Apply();
+            _section = ctx.Section.Value;
+            SectionTitle = SectionToTitle(_section);
 
             if (ctx.Resource is not null)
             {
@@ -49,11 +38,6 @@ public sealed partial class AppGwSectionPage : Page
 
             RenderSection();
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private ObservableCollection<Dictionary<string, string>>? _currentCollection;
@@ -396,11 +380,11 @@ public sealed partial class AppGwSectionPage : Page
 
         if (_section == AppGwSection.BackendPools)
         {
-            Frame.Navigate(typeof(AppGwBackendPoolDetailPage), (_navCtx, itemName));
+            Frame.Navigate(typeof(AppGwBackendPoolDetailPage), _navCtx! with { DetailItemName = itemName });
         }
         else if (_section == AppGwSection.RoutingRules)
         {
-            Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), (_navCtx, itemName));
+            Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), _navCtx! with { DetailItemName = itemName });
         }
     }
 

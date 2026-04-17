@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:AzureDesktop"
+    xmlns:controls="using:AzureDesktop.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:services="using:AzureDesktop.Services"
     xmlns:converters="using:AzureDesktop.Converters"
@@ -27,7 +28,6 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Button
@@ -45,8 +45,22 @@
                 <FontIcon FontSize="12" Glyph="&#xE72B;" />
             </Button>
             <Button
-                x:Name="HomeButton"
+                x:Name="PaneToggleButton"
                 Grid.Column="1"
+                Width="40"
+                Padding="0"
+                VerticalAlignment="Stretch"
+                AutomationProperties.Name="Toggle navigation"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="0"
+                Click="PaneToggle_Click"
+                Visibility="Visible">
+                <FontIcon FontSize="16" Glyph="&#xE700;" />
+            </Button>
+            <Button
+                x:Name="HomeButton"
+                Grid.Column="2"
                 Width="40"
                 Padding="0"
                 VerticalAlignment="Stretch"
@@ -59,179 +73,11 @@
                 Visibility="Collapsed">
                 <FontIcon FontSize="14" Glyph="&#xE80F;" />
             </Button>
-            <Button
-                x:Name="PaneToggleButton"
-                Grid.Column="2"
-                Width="40"
-                Padding="0"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="Toggle navigation"
-                Background="Transparent"
-                BorderThickness="0"
-                CornerRadius="0"
-                Click="PaneToggle_Click"
-                Visibility="Collapsed">
-                <FontIcon FontSize="16" Glyph="&#xE700;" />
-            </Button>
-            <Button
-                x:Name="NotificationBell"
-                Grid.Column="3"
-                Width="40"
-                Padding="0"
-                VerticalAlignment="Stretch"
-                AutomationProperties.Name="Operations"
-                Background="Transparent"
-                BorderThickness="0"
-                CornerRadius="0"
-                ToolTipService.ToolTip="Operations">
-                <Grid>
-                    <FontIcon FontSize="16" Glyph="&#xEA8F;" />
-                    <InfoBadge
-                        x:Name="OperationBadge"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top"
-                        Margin="8,-4,0,0"
-                        Visibility="Collapsed" />
-                </Grid>
-                <Button.Flyout>
-                    <Flyout x:Name="NotificationFlyout" Placement="BottomEdgeAlignedLeft" Opened="NotificationFlyout_Opened">
-                        <StackPanel Width="380" Spacing="8">
-                            <TextBlock FontSize="16" FontWeight="SemiBold" Text="Operations" />
-                            <TextBlock
-                                x:Name="NoOperationsText"
-                                FontSize="13"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="No operations yet" />
-                            <ListView
-                                x:Name="OperationsList"
-                                MaxHeight="400"
-                                SelectionMode="None">
-                                <ListView.Resources>
-                                    <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
-                                </ListView.Resources>
-                                <ListView.ItemContainerStyle>
-                                    <Style TargetType="ListViewItem">
-                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                        <Setter Property="Padding" Value="0" />
-                                        <Setter Property="Margin" Value="0,2" />
-                                    </Style>
-                                </ListView.ItemContainerStyle>
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="services:OperationEntry">
-                                        <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                            <Expander.Header>
-                                                <Grid Padding="4,6">
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
-                                                    </Grid.ColumnDefinitions>
 
-                                                    <!-- Status icon / spinner -->
-                                                    <ProgressRing
-                                                        Width="16" Height="16"
-                                                        VerticalAlignment="Center"
-                                                        IsActive="True"
-                                                        Visibility="{x:Bind InProgressVisibility, Mode=OneWay}" />
-                                                    <FontIcon
-                                                        FontSize="14"
-                                                        VerticalAlignment="Center"
-                                                        Foreground="{ThemeResource SystemFillColorSuccessBrush}"
-                                                        Glyph="&#xE73E;"
-                                                        Visibility="{x:Bind SucceededVisibility, Mode=OneWay}" />
-                                                    <FontIcon
-                                                        FontSize="14"
-                                                        VerticalAlignment="Center"
-                                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                                                        Glyph="&#xEA39;"
-                                                        Visibility="{x:Bind FailedVisibility, Mode=OneWay}" />
-
-                                                    <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="1">
-                                                        <TextBlock FontWeight="SemiBold" FontSize="13" Text="{x:Bind OperationName}" TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ResourceName}" TextTrimming="CharacterEllipsis" />
-                                                    </StackPanel>
-
-                                                    <TextBlock
-                                                        Grid.Column="2"
-                                                        FontSize="11"
-                                                        VerticalAlignment="Center"
-                                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                                        Text="{x:Bind Duration, Mode=OneWay}" />
-                                                </Grid>
-                                            </Expander.Header>
-                                            <Expander.Content>
-                                                <StackPanel Spacing="6" Padding="4,8">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceName}" TextWrapping="Wrap" />
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Type" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceType}" />
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceId}" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Tracking ID" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind TrackingId, Mode=OneWay, TargetNullValue='—'}" IsTextSelectionEnabled="True" />
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Started" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind StartedAtFormatted}" />
-                                                    </Grid>
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Completed" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind CompletedAtFormatted, Mode=OneWay}" />
-                                                    </Grid>
-                                                    <Grid Visibility="{x:Bind FailedVisibility, Mode=OneWay}">
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="100" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock FontSize="12" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="Error" />
-                                                        <TextBlock Grid.Column="1" FontSize="12" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{x:Bind ErrorMessage, Mode=OneWay}" TextWrapping="Wrap" />
-                                                    </Grid>
-                                                </StackPanel>
-                                            </Expander.Content>
-                                        </Expander>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </StackPanel>
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-
-            <!-- Inline operation status (to the right of bell) -->
+            <!-- Inline operation status -->
             <Border
                 x:Name="InlineStatusBorder"
-                Grid.Column="4"
+                Grid.Column="3"
                 Padding="8,0"
                 VerticalAlignment="Center"
                 Visibility="Collapsed">
@@ -269,7 +115,105 @@
             OpenPaneLength="280"
             PaneDisplayMode="Left">
 
-            <Frame x:Name="ContentFrame" Margin="48,0,0,0" CacheSize="0" />
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Name="NotificationBell" Content="Operations" Tag="Operations" AutomationProperties.Name="Operations" SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEA8F;" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge x:Name="OperationBadge" Visibility="Collapsed" />
+                    </NavigationViewItem.InfoBadge>
+                    <FlyoutBase.AttachedFlyout>
+                        <Flyout x:Name="NotificationFlyout" Placement="RightEdgeAlignedBottom" Opened="NotificationFlyout_Opened">
+                            <StackPanel Width="380" Spacing="8">
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Text="Operations" />
+                                <TextBlock
+                                    x:Name="NoOperationsText"
+                                    FontSize="13"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="No operations yet" />
+                                <ListView
+                                    x:Name="OperationsList"
+                                    MaxHeight="400"
+                                    SelectionMode="None">
+                                    <ListView.Resources>
+                                        <converters:BoolToVisibilityConverter x:Key="BoolToVis" />
+                                    </ListView.Resources>
+                                    <ListView.ItemContainerStyle>
+                                        <Style TargetType="ListViewItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            <Setter Property="Padding" Value="0" />
+                                            <Setter Property="Margin" Value="0,2" />
+                                        </Style>
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="services:OperationEntry">
+                                            <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                                <Expander.Header>
+                                                    <Grid Padding="4,6">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <ProgressRing Width="16" Height="16" VerticalAlignment="Center" IsActive="True" Visibility="{x:Bind InProgressVisibility, Mode=OneWay}" />
+                                                        <FontIcon FontSize="14" VerticalAlignment="Center" Foreground="{ThemeResource SystemFillColorSuccessBrush}" Glyph="&#xE73E;" Visibility="{x:Bind SucceededVisibility, Mode=OneWay}" />
+                                                        <FontIcon FontSize="14" VerticalAlignment="Center" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Glyph="&#xEA39;" Visibility="{x:Bind FailedVisibility, Mode=OneWay}" />
+                                                        <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="1">
+                                                            <TextBlock FontWeight="SemiBold" FontSize="13" Text="{x:Bind OperationName}" TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ResourceName}" TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                        <TextBlock Grid.Column="2" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorTertiaryBrush}" Text="{x:Bind Duration, Mode=OneWay}" />
+                                                    </Grid>
+                                                </Expander.Header>
+                                                <Expander.Content>
+                                                    <StackPanel Spacing="6" Padding="4,8">
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceName}" TextWrapping="Wrap" /></Grid>
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Type" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceType}" /></Grid>
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Resource ID" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind ResourceId}" IsTextSelectionEnabled="True" TextWrapping="Wrap" /></Grid>
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Tracking ID" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind TrackingId, Mode=OneWay, TargetNullValue='—'}" IsTextSelectionEnabled="True" /></Grid>
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Started" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind StartedAtFormatted}" /></Grid>
+                                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Completed" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Text="{x:Bind CompletedAtFormatted, Mode=OneWay}" /></Grid>
+                                                        <Grid Visibility="{x:Bind FailedVisibility, Mode=OneWay}"><Grid.ColumnDefinitions><ColumnDefinition Width="100" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock FontSize="12" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="Error" />
+                                                            <TextBlock Grid.Column="1" FontSize="12" Foreground="{ThemeResource SystemFillColorCriticalBrush}" Text="{x:Bind ErrorMessage, Mode=OneWay}" TextWrapping="Wrap" /></Grid>
+                                                    </StackPanel>
+                                                </Expander.Content>
+                                            </Expander>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </Flyout>
+                    </FlyoutBase.AttachedFlyout>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Settings" Tag="Settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
+            <Grid Margin="48,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <controls:BreadcrumbControl x:Name="BreadcrumbNav" Grid.Row="0" Margin="0,0,0,8" />
+                <Frame x:Name="ContentFrame" Grid.Row="1" CacheSize="0" />
+            </Grid>
         </NavigationView>
     </Grid>
 </Window>

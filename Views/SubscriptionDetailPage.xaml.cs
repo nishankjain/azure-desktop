@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -13,7 +12,6 @@ public sealed partial class SubscriptionDetailPage : Page
     public ResourceGroupsViewModel RgViewModel { get; }
 
     private SubscriptionItem? _item;
-    private BreadcrumbHelper? _breadcrumbHelper;
     private bool _suppressFilterEvents;
 
     public SubscriptionDetailPage()
@@ -27,23 +25,13 @@ public sealed partial class SubscriptionDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is SubscriptionItem item)
+        if (e.Parameter is NavigationContext ctx)
         {
-            _item = item;
-            ViewModel.Subscription = item;
+            _item = ctx.Subscription;
+            ViewModel.Subscription = ctx.Subscription;
 
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => { });
-            _breadcrumbHelper.Apply();
-
-            await RgViewModel.LoadForSubscriptionAsync(item, default);
+            await RgViewModel.LoadForSubscriptionAsync(ctx.Subscription, default);
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void ResourceGroupList_ItemClick(object sender, ItemClickEventArgs e)

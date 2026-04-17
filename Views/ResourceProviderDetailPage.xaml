@@ -11,16 +11,6 @@
         <StackPanel Padding="16,8,40,40" Spacing="24">
 
             <!-- Breadcrumb -->
-            <StackPanel Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
-                <Button x:Name="EllipsisButton" Visibility="Collapsed" Style="{StaticResource BreadcrumbEllipsisStyle}" Content="..." />
-                <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
-                    <BreadcrumbBar.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
-                        </DataTemplate>
-                    </BreadcrumbBar.ItemTemplate>
-                </BreadcrumbBar>
-            </StackPanel>
 
             <!-- Title -->
             <TextBlock FontSize="20" FontWeight="SemiBold" Text="{x:Bind ProviderNamespace, Mode=OneWay}" />

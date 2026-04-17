@@ -1,4 +1,3 @@
-using AzureDesktop.Helpers;
 using AzureDesktop.Services;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
@@ -9,7 +8,6 @@ namespace AzureDesktop.Views;
 
 public sealed partial class ResourceProviderDetailPage : Page
 {
-    private BreadcrumbHelper? _breadcrumbHelper;
 
     private ResourceProviderEntry? _entry;
     private SubscriptionItem? _subItem;
@@ -40,26 +38,14 @@ public sealed partial class ResourceProviderDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (ResourceProviderEntry entry, SubscriptionItem sub))
+        if (e.Parameter is NavigationContext ctx && ctx.ResourceProvider is not null)
         {
-            _entry = entry;
-            _subItem = sub;
-            _allResourceTypes = entry.ResourceTypes;
-
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
-            _breadcrumbHelper.Add("Resource Providers", () => Frame.Navigate(typeof(ResourceProvidersPage), _subItem));
-            _breadcrumbHelper.Add("Resource Provider", () => { });
-            _breadcrumbHelper.Apply();
+            _entry = ctx.ResourceProvider;
+            _subItem = ctx.Subscription;
+            _allResourceTypes = ctx.ResourceProvider.ResourceTypes;
 
             Bindings.Update();
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void ResourceTypeSearch_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

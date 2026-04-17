@@ -10,16 +10,6 @@
     <ScrollViewer>
         <StackPanel Padding="16,8,40,40" Spacing="24">
 
-            <StackPanel Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
-                <Button x:Name="EllipsisButton" Visibility="Collapsed" Style="{StaticResource BreadcrumbEllipsisStyle}" Content="..." />
-                <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
-                    <BreadcrumbBar.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
-                        </DataTemplate>
-                    </BreadcrumbBar.ItemTemplate>
-                </BreadcrumbBar>
-            </StackPanel>
 
             <StackPanel Orientation="Horizontal" Spacing="12">
                 <Image x:Name="ResourceIcon" Width="28" Height="28" VerticalAlignment="Center" />

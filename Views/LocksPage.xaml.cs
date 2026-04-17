@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -11,9 +9,6 @@ public sealed partial class LocksPage : Page
 {
     public LockManagerViewModel ViewModel { get; }
 
-    private object? _parentNavParam;
-    private BreadcrumbHelper? _breadcrumbHelper;
-
     public LocksPage()
     {
         ViewModel = App.GetService<LockManagerViewModel>();
@@ -24,47 +19,20 @@ public sealed partial class LocksPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (string resourceId, List<string> breadcrumbs, object navParam))
+        if (e.Parameter is NavigationContext ctx)
         {
-            _parentNavParam = navParam;
-
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            foreach (var b in breadcrumbs)
-            {
-                _breadcrumbHelper.Add(b, NavigateToParent);
-            }
-
-            _breadcrumbHelper.Add("Locks", () => { });
-            _breadcrumbHelper.Apply();
-
+            var resourceId = GetResourceId(ctx);
             await ViewModel.LoadLocksAsync(resourceId);
         }
     }
 
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
+    private static string GetResourceId(NavigationContext ctx)
     {
-        _breadcrumbHelper?.HandleClick(args.Index);
-    }
-
-    private void NavigateToParent()
-    {
-        if (_parentNavParam is NavigationContext ctx)
-        {
-            if (ctx.Resource is not null)
-                Frame.Navigate(typeof(ResourceDetailPage), ctx);
-            else if (ctx.ResourceGroupName is not null)
-                Frame.Navigate(typeof(ResourceGroupDetailPage), ctx);
-            else
-                Frame.Navigate(typeof(SubscriptionDetailPage), ctx.Subscription);
-        }
-        else if (_parentNavParam is SubscriptionItem sub)
-        {
-            Frame.Navigate(typeof(SubscriptionDetailPage), sub);
-        }
-        else if (Frame.CanGoBack)
-        {
-            Frame.GoBack();
-        }
+        if (ctx.Resource is not null)
+            return ctx.Resource.ResourceId;
+        if (ctx.ResourceGroupName is not null)
+            return $"/subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}";
+        return $"/subscriptions/{ctx.SubscriptionId}";
     }
 
     private void EditLock_Click(object sender, RoutedEventArgs e)

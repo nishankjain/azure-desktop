@@ -21,16 +21,6 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
-                <Button x:Name="EllipsisButton" Visibility="Collapsed" Style="{StaticResource BreadcrumbEllipsisStyle}" Content="..." />
-                <BreadcrumbBar x:Name="Breadcrumb" ItemClicked="Breadcrumb_ItemClicked">
-                    <BreadcrumbBar.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
-                        </DataTemplate>
-                    </BreadcrumbBar.ItemTemplate>
-                </BreadcrumbBar>
-            </StackPanel>
 
         <TextBlock x:Name="TitleText" Grid.Row="1" FontSize="20" FontWeight="SemiBold" Margin="0,8,0,8" />
 

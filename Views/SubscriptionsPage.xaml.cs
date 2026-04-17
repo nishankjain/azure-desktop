@@ -26,7 +26,7 @@ public sealed partial class SubscriptionsPage : Page
     {
         if (e.ClickedItem is SubscriptionItem item)
         {
-            Frame.Navigate(typeof(SubscriptionDetailPage), item);
+            Frame.Navigate(typeof(SubscriptionDetailPage), new NavigationContext(item));
         }
     }
 

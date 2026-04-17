@@ -1,4 +1,3 @@
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -9,8 +8,6 @@ namespace AzureDesktop.Views;
 public sealed partial class FeaturesPage : Page
 {
     public FeaturesViewModel ViewModel { get; }
-
-    private BreadcrumbHelper? _breadcrumbHelper;
     private SubscriptionItem? _subItem;
 
     public FeaturesPage()
@@ -23,22 +20,12 @@ public sealed partial class FeaturesPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is SubscriptionItem sub)
+        if (e.Parameter is NavigationContext ctx)
         {
-            _subItem = sub;
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _subItem));
-            _breadcrumbHelper.Add("Preview Features", () => { });
-            _breadcrumbHelper.Apply();
+            _subItem = ctx.Subscription;
 
-            await ViewModel.LoadProvidersAsync(sub.Id);
+            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId);
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private async void Provider_ItemClick(object sender, ItemClickEventArgs e)
@@ -53,7 +40,7 @@ public sealed partial class FeaturesPage : Page
     {
         if (e.ClickedItem is FeatureEntry entry && _subItem is not null)
         {
-            Frame.Navigate(typeof(FeatureDetailPage), (entry, _subItem));
+            Frame.Navigate(typeof(FeatureDetailPage), new NavigationContext(_subItem, Feature: entry));
         }
     }
 

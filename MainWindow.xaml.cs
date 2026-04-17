@@ -3,6 +3,7 @@ using AzureDesktop.ViewModels;
 using AzureDesktop.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace AzureDesktop;
 
@@ -140,20 +141,15 @@ public sealed partial class MainWindow : Window
         {
             NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.LeftMinimal;
             NavView.IsPaneOpen = false;
-            PaneToggleButton.Visibility = Visibility.Visible;
         }
         else
         {
             NavView.PaneDisplayMode = NavigationViewPaneDisplayMode.Left;
-            PaneToggleButton.Visibility = Visibility.Collapsed;
         }
     }
 
     private void NavView_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
     {
-        PaneToggleButton.Visibility = args.DisplayMode == NavigationViewDisplayMode.Minimal
-            ? Visibility.Visible
-            : Visibility.Collapsed;
     }
 
     private string? _lastAppGwNavTag;
@@ -177,56 +173,38 @@ public sealed partial class MainWindow : Window
 
         _lastAppGwNavTag = null;
 
-        if (e.Parameter is SubscriptionItem sub)
-        {
-            _activeSubscription = sub;
-            _activeNavContext = null;
-        }
-        else if (e.Parameter is (NavigationContext appGwCtx, AppGwSection section))
-        {
-            _activeSubscription = appGwCtx.Subscription;
-            _activeNavContext = appGwCtx;
-            _lastAppGwNavTag = section switch
-            {
-                AppGwSection.BackendPools => "AppGwBackendPools",
-                AppGwSection.BackendSettings => "AppGwBackendSettings",
-                AppGwSection.FrontendIP => "AppGwFrontendIP",
-                AppGwSection.PrivateLink => "AppGwPrivateLink",
-                AppGwSection.SslSettings => "AppGwSsl",
-                AppGwSection.Listeners => "AppGwListeners",
-                AppGwSection.RoutingRules => "AppGwRoutingRules",
-                AppGwSection.RewriteSets => "AppGwRewriteSets",
-                AppGwSection.HealthProbes => "AppGwHealthProbes",
-                AppGwSection.Configuration => "AppGwConfig",
-                AppGwSection.Waf => "AppGwWaf",
-                AppGwSection.JwtValidation => "AppGwJwt",
-                _ => "AppGwOverview",
-            };
-        }
-        else if (e.Parameter is NavigationContext ctx)
+        if (e.Parameter is NavigationContext ctx)
         {
             _activeSubscription = ctx.Subscription;
             _activeNavContext = ctx;
-        }
-        else if (e.Parameter is (NavigationContext subDetailCtx, string _))
-        {
-            _activeSubscription = subDetailCtx.Subscription;
-            _activeNavContext = subDetailCtx;
-        }
-        else if (e.Parameter is (string, List<string>, NavigationContext tagLockCtx))
-        {
-            _activeSubscription = tagLockCtx.Subscription;
-            _activeNavContext = tagLockCtx;
-        }
-        else if (e.Parameter is (string, List<string>, SubscriptionItem tagLockSub))
-        {
-            _activeSubscription = tagLockSub;
-            _activeNavContext = null;
+
+            if (ctx.Section is not null)
+            {
+                _lastAppGwNavTag = ctx.Section switch
+                {
+                    AppGwSection.BackendPools => "AppGwBackendPools",
+                    AppGwSection.BackendSettings => "AppGwBackendSettings",
+                    AppGwSection.FrontendIP => "AppGwFrontendIP",
+                    AppGwSection.PrivateLink => "AppGwPrivateLink",
+                    AppGwSection.SslSettings => "AppGwSsl",
+                    AppGwSection.Listeners => "AppGwListeners",
+                    AppGwSection.RoutingRules => "AppGwRoutingRules",
+                    AppGwSection.RewriteSets => "AppGwRewriteSets",
+                    AppGwSection.HealthProbes => "AppGwHealthProbes",
+                    AppGwSection.Configuration => "AppGwConfig",
+                    AppGwSection.Waf => "AppGwWaf",
+                    AppGwSection.JwtValidation => "AppGwJwt",
+                    _ => "AppGwOverview",
+                };
+            }
+
+            BreadcrumbNav.Build(ctx, ContentFrame);
         }
         else if (e.SourcePageType == typeof(HomePage) || e.SourcePageType == typeof(SubscriptionsPage))
         {
             _activeSubscription = null;
             _activeNavContext = null;
+            BreadcrumbNav.Build(null, ContentFrame);
         }
 
         UpdateContextNav(e.SourcePageType);
@@ -338,8 +316,8 @@ public sealed partial class MainWindow : Window
             Icon = new ImageIcon
             {
                 Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri($"ms-appx:///Assets/Icons/{iconFileName}")),
-                Width = 20,
-                Height = 20,
+                Width = 16,
+                Height = 16,
             },
         };
     }
@@ -373,6 +351,13 @@ public sealed partial class MainWindow : Window
 
         var tag = item.Tag?.ToString();
 
+        // Operations flyout (not a page navigation)
+        if (tag == "Operations")
+        {
+            FlyoutBase.ShowAttachedFlyout(NotificationBell);
+            return;
+        }
+
         // Resource-level nav
         if (_activeNavContext?.Resource is not null)
         {
@@ -383,10 +368,10 @@ public sealed partial class MainWindow : Window
                     ContentFrame.Navigate(typeof(ResourceDetailPage), _activeNavContext);
                     return;
                 case "ResourceTags":
-                    NavigateToTags(_activeNavContext.Resource.ResourceId, BuildBreadcrumbs("resource"));
+                    ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { PageLabel = "Tags" });
                     return;
                 case "ResourceLocks":
-                    NavigateToLocks(_activeNavContext.Resource.ResourceId, BuildBreadcrumbs("resource"));
+                    ContentFrame.Navigate(typeof(LocksPage), _activeNavContext with { PageLabel = "Locks" });
                     return;
             }
 
@@ -409,7 +394,7 @@ public sealed partial class MainWindow : Window
                     "AppGwJwt" => AppGwSection.JwtValidation,
                     _ => AppGwSection.Overview,
                 };
-                ContentFrame.Navigate(typeof(AppGwSectionPage), (_activeNavContext, section));
+                ContentFrame.Navigate(typeof(AppGwSectionPage), _activeNavContext with { Section = section, DetailItemName = null, PageLabel = null });
                 return;
             }
         }
@@ -424,10 +409,10 @@ public sealed partial class MainWindow : Window
                     ContentFrame.Navigate(typeof(ResourceGroupDetailPage), _activeNavContext with { Resource = null });
                     return;
                 case "RGTags":
-                    NavigateToTags(rgId, BuildBreadcrumbs("rg"));
+                    ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { Resource = null, PageLabel = "Tags" });
                     return;
                 case "RGLocks":
-                    NavigateToLocks(rgId, BuildBreadcrumbs("rg"));
+                    ContentFrame.Navigate(typeof(LocksPage), _activeNavContext with { Resource = null, PageLabel = "Locks" });
                     return;
             }
         }
@@ -435,66 +420,22 @@ public sealed partial class MainWindow : Window
         // Subscription-level nav
         if (_activeSubscription is not null)
         {
+            var subCtx = _activeNavContext ?? new NavigationContext(_activeSubscription);
             switch (tag)
             {
                 case "SubscriptionDetail":
-                    ContentFrame.Navigate(typeof(SubscriptionDetailPage), _activeSubscription);
+                    ContentFrame.Navigate(typeof(SubscriptionDetailPage), new NavigationContext(_activeSubscription));
                     return;
                 case "ManageTags":
-                    NavigateToTags($"/subscriptions/{_activeSubscription.Id}", BuildBreadcrumbs("sub"));
+                    ContentFrame.Navigate(typeof(TagsPage), new NavigationContext(_activeSubscription, PageLabel: "Tags"));
                     return;
                 case "ManageLocks":
-                    NavigateToLocks($"/subscriptions/{_activeSubscription.Id}", BuildBreadcrumbs("sub"));
+                    ContentFrame.Navigate(typeof(LocksPage), new NavigationContext(_activeSubscription, PageLabel: "Locks"));
                     return;
                 case "PreviewFeatures":
-                    ContentFrame.Navigate(typeof(FeaturesPage), _activeSubscription);
+                    ContentFrame.Navigate(typeof(FeaturesPage), new NavigationContext(_activeSubscription, PageLabel: "Preview Features"));
                     return;
             }
         }
-    }
-
-    private void NavigateToTags(string resourceId, List<string> breadcrumbs)
-    {
-        var navParam = (_activeNavContext as object) ?? _activeSubscription;
-        ContentFrame.Navigate(typeof(TagsPage), (resourceId, breadcrumbs, navParam));
-    }
-
-    private void NavigateToLocks(string resourceId, List<string> breadcrumbs)
-    {
-        var navParam = (_activeNavContext as object) ?? _activeSubscription;
-        ContentFrame.Navigate(typeof(LocksPage), (resourceId, breadcrumbs, navParam));
-    }
-
-    private List<string> BuildBreadcrumbs(string scope)
-    {
-        var crumbs = new List<string>();
-
-        if (_activeSubscription is not null)
-        {
-            crumbs.Add("Subscriptions");
-            crumbs.Add("Subscription");
-        }
-
-        if (scope == "sub")
-        {
-            return crumbs;
-        }
-
-        if (_activeNavContext?.ResourceGroupName is not null)
-        {
-            crumbs.Add("Resource Group");
-        }
-
-        if (scope == "rg")
-        {
-            return crumbs;
-        }
-
-        if (_activeNavContext?.Resource is not null)
-        {
-            crumbs.Add(_activeNavContext.Resource.SingularType);
-        }
-
-        return crumbs;
     }
 }

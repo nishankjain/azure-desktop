@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using AzureDesktop.Controls;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -15,7 +14,6 @@ public sealed partial class ResourceGroupDetailPage : Page
     public ObservableCollection<string> BreadcrumbItems { get; } = [];
 
     private NavigationContext? _navCtx;
-    private BreadcrumbHelper? _breadcrumbHelper;
     private bool _suppressFilterEvents;
 
     public ResourceGroupDetailPage()
@@ -36,22 +34,11 @@ public sealed partial class ResourceGroupDetailPage : Page
             var rgItem = new ResourceGroupItem(ctx.ResourceGroupName, ctx.ResourceGroupLocation ?? "");
             ViewModel.Load(ctx.SubscriptionId, rgItem);
 
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), ctx.Subscription));
-            _breadcrumbHelper.Add("Resource Group", () => { });
-            _breadcrumbHelper.Apply();
-
             await ResViewModel.LoadForResourceGroupAsync(
                 ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, default);
 
             GroupedResourcesSource.Source = ResViewModel.GroupedResources;
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void Resource_ItemClick(object sender, ItemClickEventArgs e)

@@ -1,5 +1,4 @@
 using Azure.ResourceManager.Network.Models;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,8 +9,6 @@ namespace AzureDesktop.Views;
 public sealed partial class AppGwRoutingRuleDetailPage : Page
 {
     public AppGwViewModel ViewModel { get; }
-
-    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private string _ruleName = "";
 
@@ -99,20 +96,11 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (NavigationContext ctx, string ruleName))
+        if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
         {
             _navCtx = ctx;
-            _ruleName = ruleName;
-            TitleText.Text = ruleName;
-
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
-            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx! with { Resource = null }));
-            _breadcrumbHelper.Add(ctx.Resource?.SingularType ?? "Resource", () => Frame.Navigate(typeof(ResourceDetailPage), _navCtx));
-            _breadcrumbHelper.Add("Routing Rules", () => Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.RoutingRules)));
-            _breadcrumbHelper.Add("Routing Rule", () => { });
-            _breadcrumbHelper.Apply();
+            _ruleName = ctx.DetailItemName;
+            TitleText.Text = ctx.DetailItemName;
 
             if (ctx.Resource is not null)
             {
@@ -121,11 +109,6 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
 
             RenderForm();
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private void RenderForm()

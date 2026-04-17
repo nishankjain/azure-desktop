@@ -1,5 +1,4 @@
 using Azure.ResourceManager.Network.Models;
-using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,8 +9,6 @@ namespace AzureDesktop.Views;
 public sealed partial class AppGwBackendPoolDetailPage : Page
 {
     public AppGwViewModel ViewModel { get; }
-
-    private BreadcrumbHelper? _breadcrumbHelper;
     private NavigationContext? _navCtx;
     private string _poolName = "";
     private List<TargetRow> _allTargets = [];
@@ -29,20 +26,11 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
-        if (e.Parameter is (NavigationContext ctx, string poolName))
+        if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
         {
             _navCtx = ctx;
-            _poolName = poolName;
-            TitleText.Text = poolName;
-
-            _breadcrumbHelper = new BreadcrumbHelper(Breadcrumb, EllipsisButton);
-            _breadcrumbHelper.Add("Subscriptions", () => { Frame.BackStack.Clear(); Frame.Navigate(typeof(SubscriptionsPage)); });
-            _breadcrumbHelper.Add("Subscription", () => Frame.Navigate(typeof(SubscriptionDetailPage), _navCtx!.Subscription));
-            _breadcrumbHelper.Add("Resource Group", () => Frame.Navigate(typeof(ResourceGroupDetailPage), _navCtx! with { Resource = null }));
-            _breadcrumbHelper.Add(ctx.Resource?.SingularType ?? "Resource", () => Frame.Navigate(typeof(ResourceDetailPage), _navCtx));
-            _breadcrumbHelper.Add("Backend Pools", () => Frame.Navigate(typeof(AppGwSectionPage), (_navCtx, AppGwSection.BackendPools)));
-            _breadcrumbHelper.Add("Backend Pool", () => { });
-            _breadcrumbHelper.Apply();
+            _poolName = ctx.DetailItemName;
+            TitleText.Text = ctx.DetailItemName;
 
             if (ctx.Resource is not null)
             {
@@ -52,11 +40,6 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
             LoadTargets();
             RenderRules();
         }
-    }
-
-    private void Breadcrumb_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
-    {
-        _breadcrumbHelper?.HandleClick(args.Index);
     }
 
     private sealed class TargetRow
@@ -193,7 +176,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
                 };
                 border.PointerPressed += (s, _) =>
                 {
-                    if (_navCtx is not null) Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), (_navCtx, ruleName));
+                    if (_navCtx is not null) Frame.Navigate(typeof(AppGwRoutingRuleDetailPage), _navCtx with { Section = AppGwSection.RoutingRules, DetailItemName = ruleName });
                 };
                 border.PointerEntered += (s, _) => ((Border)s).Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"];
                 border.PointerExited += (s, _) => ((Border)s).Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
