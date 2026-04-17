@@ -40,7 +40,6 @@ public partial class App : Application
         services.AddTransient<FeaturesViewModel>();
         services.AddTransient<FeatureDetailViewModel>();
         services.AddTransient<ResourceProvidersViewModel>();
-        services.AddTransient<ApplicationGatewayViewModel>();
 
         _serviceProvider = services.BuildServiceProvider();
     }

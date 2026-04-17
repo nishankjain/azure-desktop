@@ -7,6 +7,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class ResourceProvidersPage : Page
 {
+    private CancellationTokenSource? _cts;
     public ResourceProvidersViewModel ViewModel { get; }
     private SubscriptionItem? _subItem;
 
@@ -20,11 +21,14 @@ public sealed partial class ResourceProvidersPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx)
         {
             _subItem = ctx.Subscription;
 
-            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId);
+            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId, _cts.Token);
         }
     }
 
@@ -55,5 +59,13 @@ public sealed partial class ResourceProvidersPage : Page
     private void SortToggle_Click(object sender, RoutedEventArgs e)
     {
         SortLabel.Text = ViewModel.SortAscending ? "A-Z" : "Z-A";
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }

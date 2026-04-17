@@ -1,11 +1,13 @@
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
 public sealed partial class SubscriptionsPage : Page
 {
+    private CancellationTokenSource? _cts;
     public SubscriptionsViewModel ViewModel { get; }
 
     public SubscriptionsPage()
@@ -14,12 +16,25 @@ public sealed partial class SubscriptionsPage : Page
         InitializeComponent();
     }
 
-    private async void Page_Loaded(object sender, RoutedEventArgs e)
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
+        base.OnNavigatedTo(e);
+
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (ViewModel.FilteredSubscriptions.Count == 0 && !ViewModel.IsLoading)
         {
             await ViewModel.LoadSubscriptionsCommand.ExecuteAsync(null);
         }
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 
     private void SubscriptionList_ItemClick(object sender, ItemClickEventArgs e)

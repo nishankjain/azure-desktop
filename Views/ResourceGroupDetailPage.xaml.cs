@@ -9,6 +9,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class ResourceGroupDetailPage : Page
 {
+    private CancellationTokenSource? _cts;
     public ResourceGroupDetailViewModel ViewModel { get; }
     public ResourcesViewModel ResViewModel { get; }
     public ObservableCollection<string> BreadcrumbItems { get; } = [];
@@ -27,6 +28,9 @@ public sealed partial class ResourceGroupDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx && ctx.ResourceGroupName is not null)
         {
             _navCtx = ctx;
@@ -35,7 +39,7 @@ public sealed partial class ResourceGroupDetailPage : Page
             ViewModel.Load(ctx.SubscriptionId, rgItem);
 
             await ResViewModel.LoadForResourceGroupAsync(
-                ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, default);
+                ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, _cts.Token);
 
             GroupedResourcesSource.Source = ResViewModel.GroupedResources;
         }
@@ -128,24 +132,16 @@ public sealed partial class ResourceGroupDetailPage : Page
         SortLocationButton.Content = ResViewModel.SortField == "Location" ? $"Location {arrow}" : "Location";
     }
 
-    private async void ManageTags_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.ResourceId is not null)
-        {
-            await TagManagerDialog.ShowAsync(ViewModel.ResourceId, XamlRoot);
-        }
-    }
-
-    private async void ManageLocks_Click(object sender, RoutedEventArgs e)
-    {
-        if (ViewModel.ResourceId is not null)
-        {
-            await LockManagerDialog.ShowAsync(ViewModel.ResourceId, XamlRoot);
-        }
-    }
-
     private void RefreshGroupedSource()
     {
         GroupedResourcesSource.Source = ResViewModel.GroupedResources;
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }

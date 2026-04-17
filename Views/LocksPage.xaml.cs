@@ -7,6 +7,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class LocksPage : Page
 {
+    private CancellationTokenSource? _cts;
     public LockManagerViewModel ViewModel { get; }
 
     public LocksPage()
@@ -19,10 +20,13 @@ public sealed partial class LocksPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx)
         {
             var resourceId = GetResourceId(ctx);
-            await ViewModel.LoadLocksAsync(resourceId);
+            await ViewModel.LoadLocksAsync(resourceId, _cts.Token);
         }
     }
 
@@ -65,5 +69,13 @@ public sealed partial class LocksPage : Page
     {
         if (sender is Button { Tag: LockEntry entry })
             await ViewModel.ConfirmDeleteCommand.ExecuteAsync(entry);
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }

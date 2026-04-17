@@ -8,6 +8,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class AppGwSectionPage : Page
 {
+    private CancellationTokenSource? _cts;
     public AppGwViewModel ViewModel { get; }
     public string SectionTitle { get; private set; } = "";
     private NavigationContext? _navCtx;
@@ -25,6 +26,9 @@ public sealed partial class AppGwSectionPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx && ctx.Section is not null)
         {
             _navCtx = ctx;
@@ -33,7 +37,7 @@ public sealed partial class AppGwSectionPage : Page
 
             if (ctx.Resource is not null)
             {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
             }
 
             RenderSection();
@@ -819,4 +823,12 @@ public sealed partial class AppGwSectionPage : Page
         AppGwSection.JwtValidation => "JWT Validation",
         _ => section.ToString(),
     };
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
+    }
 }

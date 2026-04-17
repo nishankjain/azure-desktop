@@ -8,6 +8,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class AppGwBackendPoolDetailPage : Page
 {
+    private CancellationTokenSource? _cts;
     public AppGwViewModel ViewModel { get; }
     private NavigationContext? _navCtx;
     private string _poolName = "";
@@ -26,6 +27,9 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
         {
             _navCtx = ctx;
@@ -34,7 +38,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
 
             if (ctx.Resource is not null)
             {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
             }
 
             LoadTargets();
@@ -215,4 +219,12 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         RenderRules();
     }
 
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
+    }
 }

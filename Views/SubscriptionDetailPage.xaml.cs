@@ -8,6 +8,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class SubscriptionDetailPage : Page
 {
+    private CancellationTokenSource? _cts;
     public SubscriptionDetailViewModel ViewModel { get; }
     public ResourceGroupsViewModel RgViewModel { get; }
 
@@ -25,12 +26,15 @@ public sealed partial class SubscriptionDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx)
         {
             _item = ctx.Subscription;
             ViewModel.Subscription = ctx.Subscription;
 
-            await RgViewModel.LoadForSubscriptionAsync(ctx.Subscription, default);
+            await RgViewModel.LoadForSubscriptionAsync(ctx.Subscription, _cts.Token);
         }
     }
 
@@ -82,5 +86,13 @@ public sealed partial class SubscriptionDetailPage : Page
         RgViewModel.ToggleSort("Name");
         var arrow = RgViewModel.SortAscending ? "↑" : "↓";
         SortNameButton.Content = $"Name {arrow}";
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }

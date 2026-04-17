@@ -8,6 +8,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class AppGwRoutingRuleDetailPage : Page
 {
+    private CancellationTokenSource? _cts;
     public AppGwViewModel ViewModel { get; }
     private NavigationContext? _navCtx;
     private string _ruleName = "";
@@ -96,6 +97,9 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
         {
             _navCtx = ctx;
@@ -104,7 +108,7 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
 
             if (ctx.Resource is not null)
             {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId);
+                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
             }
 
             RenderForm();
@@ -1055,4 +1059,12 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         });
     }
 
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
+    }
 }

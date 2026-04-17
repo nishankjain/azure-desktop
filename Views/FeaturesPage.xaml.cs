@@ -7,6 +7,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class FeaturesPage : Page
 {
+    private CancellationTokenSource? _cts;
     public FeaturesViewModel ViewModel { get; }
     private SubscriptionItem? _subItem;
 
@@ -20,11 +21,14 @@ public sealed partial class FeaturesPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx)
         {
             _subItem = ctx.Subscription;
 
-            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId);
+            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId, _cts.Token);
         }
     }
 
@@ -50,5 +54,13 @@ public sealed partial class FeaturesPage : Page
         {
             Frame.Navigate(typeof(FeatureDetailPage), (ViewModel.SearchResult, _subItem));
         }
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }

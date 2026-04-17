@@ -7,6 +7,7 @@ namespace AzureDesktop.Views;
 
 public sealed partial class TagsPage : Page
 {
+    private CancellationTokenSource? _cts;
     public TagManagerViewModel ViewModel { get; }
 
     public TagsPage()
@@ -19,10 +20,13 @@ public sealed partial class TagsPage : Page
     {
         base.OnNavigatedTo(e);
 
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
         if (e.Parameter is NavigationContext ctx)
         {
             var resourceId = GetResourceId(ctx);
-            await ViewModel.LoadTagsAsync(resourceId);
+            await ViewModel.LoadTagsAsync(resourceId, _cts.Token);
         }
     }
 
@@ -65,5 +69,13 @@ public sealed partial class TagsPage : Page
     {
         if (sender is Button { Tag: TagEntry tag })
             await ViewModel.ConfirmDeleteCommand.ExecuteAsync(tag);
+    }
+
+    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnNavigatedFrom(e);
     }
 }
