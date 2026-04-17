@@ -12,7 +12,7 @@
         <CollectionViewSource x:Name="GroupedResourcesSource" IsSourceGrouped="True" />
     </Page.Resources>
 
-    <Grid Padding="16,8,40,40">
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -21,7 +21,7 @@
 
         <!-- Breadcrumb -->
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,8,0,16">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
             <Image Width="28" Height="28" VerticalAlignment="Center">
                 <Image.Source>
                     <SvgImageSource UriSource="ms-appx:///Assets/Icons/resourceGroups.svg" />

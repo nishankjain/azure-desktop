@@ -8,7 +8,7 @@
     xmlns:vm="using:AzureDesktop.ViewModels"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
-    <Grid Padding="16,8,40,40">
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

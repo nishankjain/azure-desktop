@@ -28,6 +28,11 @@ public sealed partial class MainWindow : Window
 
         // Configure caption buttons to match title bar
         var titleBar = AppWindow.TitleBar;
+        titleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
+        titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF);
+        titleBar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF);
         AppTitleBar.Padding = new Microsoft.UI.Xaml.Thickness(0, 0, titleBar.RightInset, 0);
 
         ContentFrame.Navigated += ContentFrame_Navigated;

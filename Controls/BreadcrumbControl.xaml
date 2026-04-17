@@ -7,12 +7,12 @@
         <Button x:Name="EllipsisButton"
                 Visibility="Collapsed"
                 Style="{StaticResource BreadcrumbEllipsisStyle}"
-                Content="..." />
+                Content="···" />
         <BreadcrumbBar x:Name="Breadcrumb"
                        ItemClicked="Breadcrumb_ItemClicked">
             <BreadcrumbBar.ItemTemplate>
                 <DataTemplate x:DataType="x:String">
-                    <TextBlock Text="{x:Bind}" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Bind}" FontSize="24" FontWeight="SemiBold" LineHeight="24" Margin="0,-3,0,0" />
                 </DataTemplate>
             </BreadcrumbBar.ItemTemplate>
         </BreadcrumbBar>

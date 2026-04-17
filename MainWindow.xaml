@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
 
         <!-- Custom title bar -->
-        <Grid x:Name="AppTitleBar" Height="36" VerticalAlignment="Top">
+        <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -33,7 +33,7 @@
             <Button
                 x:Name="BackButton"
                 Grid.Column="0"
-                Width="40"
+                Width="48"
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Back"
@@ -42,12 +42,12 @@
                 CornerRadius="0"
                 Click="BackButton_Click"
                 Visibility="Collapsed">
-                <FontIcon FontSize="12" Glyph="&#xE72B;" />
+                <FontIcon FontSize="14" Glyph="&#xE72B;" />
             </Button>
             <Button
                 x:Name="PaneToggleButton"
                 Grid.Column="1"
-                Width="40"
+                Width="48"
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Toggle navigation"
@@ -56,12 +56,12 @@
                 CornerRadius="0"
                 Click="PaneToggle_Click"
                 Visibility="Visible">
-                <FontIcon FontSize="16" Glyph="&#xE700;" />
+                <FontIcon FontSize="14" Glyph="&#xE700;" />
             </Button>
             <Button
                 x:Name="HomeButton"
                 Grid.Column="2"
-                Width="40"
+                Width="48"
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Home"
@@ -107,7 +107,6 @@
         <NavigationView
             x:Name="NavView"
             Grid.Row="1"
-            Margin="16,0,0,0"
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="False"
             IsSettingsVisible="False"
@@ -206,12 +205,12 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <Grid Margin="48,0,0,0">
+            <Grid Padding="24,5,24,24">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <controls:BreadcrumbControl x:Name="BreadcrumbNav" Grid.Row="0" Margin="0,0,0,8" />
+                <controls:BreadcrumbControl x:Name="BreadcrumbNav" Grid.Row="0" Margin="0,0,0,24" />
                 <Frame x:Name="ContentFrame" Grid.Row="1" CacheSize="0" />
             </Grid>
         </NavigationView>

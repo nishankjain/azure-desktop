@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
-    <Grid Padding="16,8,40,16">
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -22,7 +22,7 @@
         </Grid.RowDefinitions>
 
 
-        <TextBlock x:Name="TitleText" Grid.Row="1" FontSize="20" FontWeight="SemiBold" Margin="0,8,0,8" />
+        <TextBlock x:Name="TitleText" Grid.Row="1" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" />
 
         <Grid Grid.Row="2">
         </Grid>

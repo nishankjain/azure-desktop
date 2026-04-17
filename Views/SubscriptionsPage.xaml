@@ -9,7 +9,7 @@
     Loaded="Page_Loaded"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
-    <Grid Padding="40">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -20,7 +20,7 @@
 
         <TextBlock
             Grid.Row="0"
-            FontSize="28"
+            FontSize="20"
             FontWeight="SemiBold"
             Text="Subscriptions" />
 

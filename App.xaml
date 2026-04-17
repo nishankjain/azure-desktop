@@ -19,10 +19,11 @@
             <Thickness x:Key="NavigationViewContentGridBorderThickness">0</Thickness>
             <x:Double x:Key="NavigationViewItemOnLeftIconBoxWidth">16</x:Double>
             <x:Double x:Key="NavigationViewItemOnLeftIconBoxHeight">16</x:Double>
-            <x:Double x:Key="BreadcrumbBarChevronFontSize">14</x:Double>
-            <Thickness x:Key="BreadcrumbBarChevronPadding">12,6,12,0</Thickness>
+            <x:Double x:Key="BreadcrumbBarChevronFontSize">16</x:Double>
+            <Thickness x:Key="BreadcrumbBarChevronPadding">12,0,12,0</Thickness>
             <Thickness x:Key="BreadcrumbBarItemThemePadding">0,0,14,0</Thickness>
             <Thickness x:Key="BreadcrumbBarChevronItemThemePadding">0,0,14,0</Thickness>
+            <Thickness x:Key="BreadcrumbBarItemThemeFontPadding">0,0</Thickness>
             <SolidColorBrush x:Key="BreadcrumbBarForegroundBrush" Color="{ThemeResource TextFillColorTertiary}" />
             <SolidColorBrush x:Key="BreadcrumbBarNormalForegroundBrush" Color="{ThemeResource TextFillColorTertiary}" />
             <SolidColorBrush x:Key="BreadcrumbBarHoverForegroundBrush" Color="{ThemeResource TextFillColorPrimary}" />
@@ -63,13 +64,11 @@
                                 </VisualStateManager.VisualStateGroups>
                                 <TextBlock x:Name="EllipsisText"
                                            Text="{TemplateBinding Content}"
-                                           FontSize="28" FontWeight="SemiBold"
+                                           FontSize="24" FontWeight="SemiBold"
                                            Foreground="{TemplateBinding Foreground}"
-                                           VerticalAlignment="Center">
-                                    <TextBlock.RenderTransform>
-                                        <TranslateTransform Y="-6" />
-                                    </TextBlock.RenderTransform>
-                                </TextBlock>
+                                           VerticalAlignment="Center"
+                                           LineHeight="24"
+                                           Margin="0,-3,0,0" />
                                 <FontIcon x:Name="ChevronIcon"
                                           Glyph="&#xE974;"
                                           FontSize="{ThemeResource BreadcrumbBarChevronFontSize}"
