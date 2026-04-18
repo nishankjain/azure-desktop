@@ -64,7 +64,7 @@
                                         <TextBlock FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Notes, Mode=OneWay}" TextTrimming="CharacterEllipsis" MaxLines="1" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="EditLock_Click" Tag="{x:Bind}" Visibility="{x:Bind IsInherited, Converter={StaticResource InverseBoolToVisibilityConverter}}" ToolTipService.ToolTip="Edit"><FontIcon FontSize="14" Glyph="&#xE70F;" /></Button>
-                                    <Button Grid.Column="3" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="DeleteLock_Click" Tag="{x:Bind}" Visibility="{x:Bind IsInherited, Converter={StaticResource InverseBoolToVisibilityConverter}}" ToolTipService.ToolTip="Delete"><FontIcon FontSize="14" Glyph="&#xE711;" /></Button>
+                                    <Button Grid.Column="3" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="DeleteLock_Click" Tag="{x:Bind}" Visibility="{x:Bind IsInherited, Converter={StaticResource InverseBoolToVisibilityConverter}}" ToolTipService.ToolTip="Delete"><FontIcon FontSize="14" Glyph="&#xE74D;" /></Button>
                                 </Grid>
                                 <Grid Visibility="{x:Bind IsConfirmingDelete, Mode=OneWay}">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>

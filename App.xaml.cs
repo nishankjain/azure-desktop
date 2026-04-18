@@ -25,6 +25,7 @@ public partial class App : Application
         services.AddSingleton<IFeatureService, FeatureService>();
         services.AddSingleton<IResourceProviderService, ResourceProviderService>();
         services.AddSingleton<OperationManager>();
+        services.AddSingleton<BackendTargetResourceService>();
 
         // ViewModels
         services.AddTransient<SubscriptionsViewModel>();

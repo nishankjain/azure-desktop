@@ -5,57 +5,204 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:AzureDesktop.Views"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
-    <Grid >
+    <Page.Resources>
+        <Style x:Key="TrashButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}"
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <Border.BackgroundTransition>
+                                <BrushTransition Duration="0:0:0.15" />
+                            </Border.BackgroundTransition>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="PointerOver">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                    <DiscreteObjectKeyFrame.Value>
+                                                        <SolidColorBrush Color="#44C42B1C" />
+                                                    </DiscreteObjectKeyFrame.Value>
+                                                </DiscreteObjectKeyFrame>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Root" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0">
+                                                    <DiscreteObjectKeyFrame.Value>
+                                                        <SolidColorBrush Color="#88C42B1C" />
+                                                    </DiscreteObjectKeyFrame.Value>
+                                                </DiscreteObjectKeyFrame>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-
-        <TextBlock x:Name="TitleText" Grid.Row="1" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" />
-
-        <Grid Grid.Row="2">
-        </Grid>
-
-        <StackPanel Grid.Row="3" Margin="0,8,0,0" Orientation="Horizontal" Spacing="8">
-            <Button Click="Save_Click" Content="Save Changes" Style="{ThemeResource AccentButtonStyle}" />
-            <Button Click="AddTarget_Click" Content="Add Target" />
-        </StackPanel>
-
-        <!-- Targets Header + Search -->
-        <StackPanel Grid.Row="4" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
-            <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Text="Backend Targets" />
-            <TextBlock x:Name="TargetCountText" FontSize="12" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <TextBox x:Name="TargetSearchBox" Width="250" PlaceholderText="Filter targets..." TextChanged="TargetSearch_TextChanged" />
-        </StackPanel>
-
-        <!-- Target column headers -->
-        <Grid Grid.Row="5" Margin="0,8,0,4" Padding="8,4,8,4">
+        <!-- Title + Save -->
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Type" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <TextBlock Grid.Column="1" Text="Value" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" />
-            <TextBlock Grid.Column="2" Text="Actions" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,0,8,0" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Image Width="28" Height="28" VerticalAlignment="Center">
+                    <Image.Source>
+                        <SvgImageSource UriSource="ms-appx:///Assets/Icons/backendPools.svg" />
+                    </Image.Source>
+                </Image>
+                <TextBlock x:Name="TitleText" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button Grid.Column="1" Click="Save_Click" Content="Save Changes" Style="{ThemeResource AccentButtonStyle}" />
         </Grid>
 
-        <!-- Virtualized target list -->
-        <ListView x:Name="TargetsList" Grid.Row="6" SelectionMode="None" />
+        <!-- Two-column layout: Targets (left) | Rules (right) -->
+        <Grid Grid.Row="2" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <!-- Associated Rules Section -->
-        <TextBlock Grid.Row="7" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,4" Text="Associated Routing Rules" />
-        <StackPanel x:Name="RulesArea" Grid.Row="8" Spacing="4" Margin="0,0,0,16" />
+            <!-- Left: Backend Targets -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Targets header with search + add button -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Text="Backend Targets" />
+                    <TextBlock x:Name="TargetCountText" Grid.Column="1" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" />
+                    <TextBox x:Name="TargetSearchBox" Grid.Column="3" Width="250" Margin="0,0,8,0"
+                             PlaceholderText="Filter targets..." TextChanged="TargetSearch_TextChanged" />
+                    <Button x:Name="AddTargetButton" Grid.Column="4" Click="AddTarget_Click"
+                            Width="32" Height="32" Padding="0">
+                        <FontIcon Glyph="&#xE710;" FontSize="14" />
+                    </Button>
+                </Grid>
+
+                <!-- Column headers -->
+                <Grid Grid.Row="1" Margin="16,8,16,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Type" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock Grid.Column="1" Text="Value" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" />
+                </Grid>
+
+                <!-- Virtualized target list -->
+                <ListView x:Name="TargetsList" Grid.Row="2" SelectionMode="None">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="views:BackendTargetRow">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <ComboBox SelectedItem="{x:Bind Type, Mode=TwoWay}" Width="110"
+                                          SelectionChanged="TypeCombo_SelectionChanged" Tag="{x:Bind}">
+                                    <x:String>IP</x:String>
+                                    <x:String>FQDN</x:String>
+                                    <x:String>VM</x:String>
+                                    <x:String>VMSS</x:String>
+                                    <x:String>App Service</x:String>
+                                </ComboBox>
+                                <!-- TextBox for IP/FQDN -->
+                                <TextBox x:Name="ValueTextBox" Grid.Column="1" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         MinWidth="200" Margin="8,0,8,0" />
+                                <!-- ComboBox for resource types (VM/VMSS/App Service) -->
+                                <ComboBox x:Name="ResourceCombo" Grid.Column="1" Margin="8,0,8,0" HorizontalAlignment="Stretch"
+                                          ItemsSource="{x:Bind AvailableResources, Mode=OneWay}"
+                                          SelectedItem="{x:Bind SelectedResource, Mode=TwoWay}"
+                                          DisplayMemberPath="DisplayName"
+                                          PlaceholderText="Select a resource"
+                                          Visibility="Collapsed" />
+                                <Button Grid.Column="2" Style="{StaticResource TrashButtonStyle}"
+                                        Click="RemoveTarget_Click" Tag="{x:Bind}">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+
+            <!-- Right: Associated Routing Rules -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock FontSize="16" FontWeight="SemiBold" Margin="0,0,0,8" Text="Associated Routing Rules" />
+                <ListView x:Name="RulesList" Grid.Row="1" SelectionMode="None"
+                          ItemContainerStyle="{StaticResource CardListViewItem}"
+                          ItemClick="RuleItem_Click" IsItemClickEnabled="True">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Image Width="16" Height="16" VerticalAlignment="Center">
+                                    <Image.Source>
+                                        <SvgImageSource UriSource="ms-appx:///Assets/Icons/routingRules.svg" />
+                                    </Image.Source>
+                                </Image>
+                                <TextBlock Grid.Column="1" Text="{Binding}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <FontIcon Grid.Column="2" Glyph="&#xE76C;" FontSize="12"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>

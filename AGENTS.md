@@ -179,6 +179,8 @@ dotnet test -c Debug -p:Platform=$Platform
 - **Every change must build and pass tests** -- Run `dotnet build` and `dotnet test` (see [Build, Run & Deploy](#build-run--deploy)) before considering any task complete.
 - **Follow all instruction files** -- The detailed rules in `.github/instructions/` are authoritative. **You must actually open and read them** (not just acknowledge they exist) when working within their scope. See the trigger conditions in steps 5-8 above.
 - **Web search before decompilation** -- When facing unknown types or build errors, always search the web / API docs first. Only use WinMD/ILDASM as a last resort (see [Troubleshooting Build Errors](#troubleshooting-build-errors)).
+- **Delete actions use the trash icon** -- All delete/remove buttons must use the trash glyph `\uE74D` (&#xE74D;), not the cross/dismiss glyph `\uE711`. This applies to inline row delete buttons, toolbar delete buttons, and any destructive action icon across the app.
+- **Detail page titles must show an icon** -- Every detail page title must use the `StackPanel > Image (28×28 SVG) + TextBlock` pattern. The icon should match the resource type's SVG from `Assets/Icons/`. Example: `<StackPanel Orientation="Horizontal" Spacing="12"><Image Width="28" Height="28"><Image.Source><SvgImageSource UriSource="ms-appx:///Assets/Icons/{type}.svg" /></Image.Source></Image><TextBlock FontSize="20" FontWeight="SemiBold" /></StackPanel>`
 
 ## Windows AI Prerequisites
 

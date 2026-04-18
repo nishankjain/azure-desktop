@@ -462,7 +462,7 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
                 BorderThickness = new Thickness(0),
                 Tag = pathRuleName,
             };
-            deleteBtn.Content = new FontIcon { Glyph = "\uE711", FontSize = 14 };
+            deleteBtn.Content = new FontIcon { Glyph = "\uE74D", FontSize = 14 };
             ToolTipService.SetToolTip(deleteBtn, "Delete");
             deleteBtn.Click += DeletePathRule_Click;
 

@@ -52,7 +52,7 @@
                                     <TextBlock FontWeight="SemiBold" VerticalAlignment="Center" Text="{x:Bind Key, Mode=OneWay}" />
                                     <TextBlock Grid.Column="1" Margin="12,0,8,0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" Text="{x:Bind Value, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
                                     <Button Grid.Column="2" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="EditTag_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Edit"><FontIcon FontSize="14" Glyph="&#xE70F;" /></Button>
-                                    <Button Grid.Column="3" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="DeleteTag_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Delete"><FontIcon FontSize="14" Glyph="&#xE711;" /></Button>
+                                    <Button Grid.Column="3" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" Click="DeleteTag_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Delete"><FontIcon FontSize="14" Glyph="&#xE74D;" /></Button>
                                 </Grid>
                                 <Grid Visibility="{x:Bind IsConfirmingDelete, Mode=OneWay}">
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
