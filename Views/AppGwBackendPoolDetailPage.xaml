@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:AzureDesktop.Views"
+    xmlns:controls="using:AzureDesktop.Controls"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
     <Grid>
@@ -48,12 +49,13 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Targets header with search + add button -->
+                <!-- Targets header with search + add/delete buttons -->
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -66,21 +68,33 @@
                             Width="32" Height="32" Padding="0">
                         <FontIcon Glyph="&#xE710;" FontSize="14" />
                     </Button>
+                    <controls:DeleteButton x:Name="DeleteTargetsButton" Grid.Column="5" Click="DeleteTargets_Click"
+                                           IsEnabled="False" Margin="4,0,0,0" />
                 </Grid>
 
-                <!-- Column headers -->
-                <Grid Grid.Row="1" Margin="16,8,16,4">
+                <!-- Column headers with select-all -->
+                <Grid Grid.Row="1" Margin="0,8,0,4">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="120" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Type" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock Grid.Column="1" Text="Value" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" />
+                    <CheckBox x:Name="SelectAllTargets" MinWidth="0" Padding="0" Margin="0,0,8,0"
+                              VerticalAlignment="Center" Checked="SelectAllTargets_Changed" Unchecked="SelectAllTargets_Changed" />
+                    <TextBlock Grid.Column="1" Text="Type" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="Value" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
                 </Grid>
 
                 <!-- Virtualized target list -->
                 <ListView x:Name="TargetsList" Grid.Row="2" SelectionMode="None">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,3" />
+                            <Setter Property="MinHeight" Value="0" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
                     <ListView.ItemsPanel>
                         <ItemsPanelTemplate>
                             <ItemsStackPanel />
@@ -90,11 +104,14 @@
                         <DataTemplate x:DataType="views:BackendTargetRow">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="120" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <ComboBox SelectedItem="{x:Bind Type, Mode=TwoWay}" Width="110"
+                                <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}" MinWidth="0" Padding="0"
+                                          Margin="0,0,8,0" VerticalAlignment="Center"
+                                          Checked="TargetCheckBox_Changed" Unchecked="TargetCheckBox_Changed" />
+                                <ComboBox Grid.Column="1" SelectedItem="{x:Bind Type, Mode=TwoWay}" Width="110"
                                           SelectionChanged="TypeCombo_SelectionChanged" Tag="{x:Bind}">
                                     <x:String>IP</x:String>
                                     <x:String>FQDN</x:String>
@@ -103,20 +120,15 @@
                                     <x:String>App Service</x:String>
                                 </ComboBox>
                                 <!-- TextBox for IP/FQDN -->
-                                <TextBox x:Name="ValueTextBox" Grid.Column="1" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         MinWidth="200" Margin="8,0,8,0" />
+                                <TextBox x:Name="ValueTextBox" Grid.Column="2" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         MinWidth="200" Margin="8,0,0,0" />
                                 <!-- ComboBox for resource types (VM/VMSS/App Service) -->
-                                <ComboBox x:Name="ResourceCombo" Grid.Column="1" Margin="8,0,8,0" HorizontalAlignment="Stretch"
+                                <ComboBox x:Name="ResourceCombo" Grid.Column="2" Margin="8,0,0,0" HorizontalAlignment="Stretch"
                                           ItemsSource="{x:Bind AvailableResources, Mode=OneWay}"
                                           SelectedItem="{x:Bind SelectedResource, Mode=TwoWay}"
                                           DisplayMemberPath="DisplayName"
                                           PlaceholderText="Select a resource"
                                           Visibility="Collapsed" />
-                                <Button Grid.Column="2" Width="32" Height="32" Padding="0"
-                                        Background="Transparent" BorderThickness="0"
-                                        Click="RemoveTarget_Click" Tag="{x:Bind}">
-                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
-                                </Button>
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>

@@ -40,6 +40,9 @@ public partial class BackendTargetRow : ObservableObject
     [ObservableProperty]
     public partial bool IsLoadingResources { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsSelected { get; set; }
+
     partial void OnValueChanged(string value)
     {
         if (_initializing) return;
@@ -200,17 +203,59 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         }
     }
 
-    private void RemoveTarget_Click(object sender, RoutedEventArgs e)
+    private bool _suppressSelectAll;
+
+    private void TargetCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        if (sender is Button btn && btn.Tag is BackendTargetRow target)
+        // x:Bind hasn't updated yet, so count from UI state
+        if (sender is CheckBox cb && cb.DataContext is BackendTargetRow row)
+            row.IsSelected = cb.IsChecked == true;
+        UpdateDeleteTargetsState();
+    }
+
+    private void UpdateDeleteTargetsState()
+    {
+        var selectedCount = _allTargets.Count(t => t.IsSelected);
+        DeleteTargetsButton.IsEnabled = selectedCount > 0;
+
+        if (!_suppressSelectAll)
         {
-            var pool = ViewModel.Data?.BackendAddressPools.FirstOrDefault(p => p.Name == _poolName);
-            pool?.BackendAddresses?.Remove(target.Address);
-            _allTargets.Remove(target);
-            FilteredTargets.Remove(target);
-            TargetCountText.Text = $"({_allTargets.Count})";
-            UpdateAddButtonState();
+            _suppressSelectAll = true;
+            SelectAllTargets.IsChecked = selectedCount == _allTargets.Count && selectedCount > 0 ? true
+                : selectedCount == 0 ? false : null;
+            _suppressSelectAll = false;
         }
+    }
+
+    private void SelectAllTargets_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressSelectAll) return;
+        _suppressSelectAll = true;
+        var selectAll = SelectAllTargets.IsChecked == true;
+        foreach (var t in FilteredTargets) t.IsSelected = selectAll;
+        DeleteTargetsButton.IsEnabled = selectAll && FilteredTargets.Count > 0;
+        _suppressSelectAll = false;
+    }
+
+    private void DeleteTargets_Click(object sender, RoutedEventArgs e)
+    {
+        var pool = ViewModel.Data?.BackendAddressPools.FirstOrDefault(p => p.Name == _poolName);
+        if (pool is null) return;
+
+        var toRemove = _allTargets.Where(t => t.IsSelected).ToList();
+        foreach (var t in toRemove)
+        {
+            pool.BackendAddresses?.Remove(t.Address);
+            _allTargets.Remove(t);
+        }
+
+        TargetCountText.Text = $"({_allTargets.Count})";
+        UpdateAddButtonState();
+        RefreshTargetsList();
+        DeleteTargetsButton.IsEnabled = false;
+        _suppressSelectAll = true;
+        SelectAllTargets.IsChecked = false;
+        _suppressSelectAll = false;
     }
 
     private List<string> _ruleNames = [];
