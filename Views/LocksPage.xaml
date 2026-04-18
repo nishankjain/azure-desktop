@@ -93,6 +93,5 @@
             </ListView.ItemTemplate>
         </ListView>
 
-        <ProgressRing Grid.Row="3" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
     </Grid>
 </Page>

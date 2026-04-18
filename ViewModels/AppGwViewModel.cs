@@ -24,7 +24,7 @@ public enum AppGwSection
     JwtValidation,
 }
 
-public partial class AppGwViewModel(IAzureAuthService authService, IApplicationGatewayService gatewayService, OperationManager operationManager) : ObservableObject
+public partial class AppGwViewModel(IAzureAuthService authService, IApplicationGatewayService gatewayService, OperationManager operationManager) : ObservableObject, ILoadable
 {
     private ApplicationGatewayData? _data;
 

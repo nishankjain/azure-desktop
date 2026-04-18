@@ -24,7 +24,6 @@
             <TextBox Width="220" PlaceholderText="Feature name" Text="{x:Bind ViewModel.FeatureFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Command="{x:Bind ViewModel.SearchCommand}" Content="Search" Style="{ThemeResource AccentButtonStyle}" />
             <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsSearching, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsSearching, Mode=OneWay}" />
-            <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
         </StackPanel>
 
         <!-- Search error -->

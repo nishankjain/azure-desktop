@@ -54,7 +54,7 @@ public partial class LockEntry : ObservableObject
     public void CancelDelete() => IsConfirmingDelete = false;
 }
 
-public partial class LockManagerViewModel(ILockService lockService, OperationManager operationManager) : ObservableObject
+public partial class LockManagerViewModel(ILockService lockService, OperationManager operationManager) : ObservableObject, ILoadable
 {
     private string? _resourceId;
 

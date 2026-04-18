@@ -19,7 +19,7 @@ public partial class FeatureEntry : ObservableObject
     public bool IsRegistered => State == "Registered";
 }
 
-public partial class FeaturesViewModel(IFeatureService featureService) : ObservableObject
+public partial class FeaturesViewModel(IFeatureService featureService) : ObservableObject, ILoadable
 {
     private readonly List<string> _allProviders = [];
     private readonly List<FeatureEntry> _allFeatures = [];

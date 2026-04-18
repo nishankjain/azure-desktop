@@ -73,7 +73,7 @@ public sealed class ResourceTypeGroup(string typeName, string displayName, IRead
     public new int Count { get; } = resources.Count;
 }
 
-public partial class ResourcesViewModel(IAzureAuthService authService) : ObservableObject
+public partial class ResourcesViewModel(IAzureAuthService authService) : ObservableObject, ILoadable
 {
     private readonly List<ResourceItem> _allResources = [];
 

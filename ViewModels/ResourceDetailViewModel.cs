@@ -5,7 +5,7 @@ using AzureDesktop.Services;
 
 namespace AzureDesktop.ViewModels;
 
-public partial class ResourceDetailViewModel(IAzureAuthService authService) : ObservableObject
+public partial class ResourceDetailViewModel(IAzureAuthService authService) : ObservableObject, ILoadable
 {
     [ObservableProperty]
     public partial bool IsLoading { get; set; }

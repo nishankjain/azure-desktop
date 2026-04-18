@@ -46,7 +46,7 @@ public partial class TagEntry(string key, string value) : ObservableObject
     }
 }
 
-public partial class TagManagerViewModel(ITagService tagService, OperationManager operationManager) : ObservableObject
+public partial class TagManagerViewModel(ITagService tagService, OperationManager operationManager) : ObservableObject, ILoadable
 {
     private string? _resourceId;
 

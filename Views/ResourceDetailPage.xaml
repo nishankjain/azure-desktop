@@ -16,8 +16,6 @@
                 <TextBlock FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Text="{x:Bind ViewModel.Name, Mode=OneWay}" />
             </StackPanel>
 
-            <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
-
             <InfoBar IsClosable="False" IsOpen="{x:Bind ViewModel.ErrorMessage, Mode=OneWay, Converter={StaticResource NullToBoolConverter}}" Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}" Severity="Error" />
 
             <TextBlock FontSize="16" FontWeight="SemiBold" Text="Overview" />

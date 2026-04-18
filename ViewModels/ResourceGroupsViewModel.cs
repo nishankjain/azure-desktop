@@ -12,7 +12,7 @@ public partial class ResourceGroupItem(string name, string location)
     public string IconPath { get; } = "ms-appx:///Assets/Icons/resourceGroups.svg";
 }
 
-public partial class ResourceGroupsViewModel(IAzureAuthService authService) : ObservableObject
+public partial class ResourceGroupsViewModel(IAzureAuthService authService) : ObservableObject, ILoadable
 {
     private readonly List<ResourceGroupItem> _allResourceGroups = [];
 

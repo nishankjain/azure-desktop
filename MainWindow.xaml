@@ -210,7 +210,15 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <controls:BreadcrumbControl x:Name="BreadcrumbNav" Grid.Row="0" Margin="0,0,0,24" />
+                <Grid Grid.Row="0" Margin="0,0,0,24">
+                    <controls:BreadcrumbControl x:Name="BreadcrumbNav" HorizontalAlignment="Left" />
+                    <ProgressRing
+                        x:Name="PageLoader"
+                        Width="20" Height="20"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed" />
+                </Grid>
                 <Frame x:Name="ContentFrame" Grid.Row="1" CacheSize="0" />
             </Grid>
         </NavigationView>

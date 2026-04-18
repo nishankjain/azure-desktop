@@ -18,7 +18,7 @@ public partial class SubscriptionItem(string id, string name, string state, stri
     public string LocationPlacementId { get; init; } = string.Empty;
 }
 
-public partial class SubscriptionsViewModel(ISubscriptionService subscriptionService) : ObservableObject
+public partial class SubscriptionsViewModel(ISubscriptionService subscriptionService) : ObservableObject, ILoadable
 {
     private readonly List<SubscriptionItem> _allSubscriptions = [];
 

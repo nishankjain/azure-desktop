@@ -40,6 +40,7 @@ All detailed agent instructions are organized under `.github/instructions/`:
 | [winui-best-practices.instructions.md](.github/instructions/winui-best-practices.instructions.md) | WinUI 3 / WinAppSDK patterns & references |
 | [windows-apis.instructions.md](.github/instructions/windows-apis.instructions.md) | WinAppSDK & Platform SDK API namespace catalog & lookup guidance |
 | [testing.instructions.md](.github/instructions/testing.instructions.md) | Unit Testing, Build & Run |
+| [app-design-decisions.instructions.md](.github/instructions/app-design-decisions.instructions.md) | App-specific layout, navigation, icons, loading, and code patterns |
 
 ## Core Agent Workflow
 

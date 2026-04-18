@@ -14,6 +14,7 @@ public sealed partial class MainWindow : Window
     private SubscriptionItem? _activeSubscription;
     private NavigationContext? _activeNavContext;
     private readonly List<NavigationViewItem> _contextNavItems = [];
+    private ILoadable? _currentLoadable;
 
     public OperationManager OperationMgr { get; } = App.GetService<OperationManager>();
 
@@ -213,6 +214,47 @@ public sealed partial class MainWindow : Window
         }
 
         UpdateContextNav(e.SourcePageType);
+        BindPageLoader(ContentFrame.Content);
+    }
+
+    private void BindPageLoader(object? page)
+    {
+        // Unsubscribe from previous page's ViewModel
+        if (_currentLoadable is System.ComponentModel.INotifyPropertyChanged oldNotify)
+        {
+            oldNotify.PropertyChanged -= Loadable_PropertyChanged;
+        }
+
+        _currentLoadable = null;
+        PageLoader.Visibility = Visibility.Collapsed;
+        PageLoader.IsActive = false;
+
+        // Find the ViewModel property on the page
+        var vmProp = page?.GetType().GetProperty("ViewModel");
+        if (vmProp?.GetValue(page) is ILoadable loadable)
+        {
+            _currentLoadable = loadable;
+            UpdatePageLoader(loadable.IsLoading);
+
+            if (loadable is System.ComponentModel.INotifyPropertyChanged notify)
+            {
+                notify.PropertyChanged += Loadable_PropertyChanged;
+            }
+        }
+    }
+
+    private void Loadable_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ILoadable.IsLoading) && _currentLoadable is not null)
+        {
+            DispatcherQueue.TryEnqueue(() => UpdatePageLoader(_currentLoadable.IsLoading));
+        }
+    }
+
+    private void UpdatePageLoader(bool isLoading)
+    {
+        PageLoader.IsActive = isLoading;
+        PageLoader.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateContextNav(Type pageType)
@@ -266,10 +308,11 @@ public sealed partial class MainWindow : Window
                 CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
         }
         else if (_activeNavContext?.ResourceGroupName is not null &&
-                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
+                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
         {
             AddNavItems(
                 CreateSvgNavItem("Overview", "RGDetail", "resourceGroups.svg"),
+                CreateSvgNavItem("Resources", "Resources", "default.svg"),
                 CreateSvgNavItem("Manage Tags", "RGTags", "tags.svg"),
                 CreateSvgNavItem("Manage Locks", "RGLocks", "locks.svg"));
         }
@@ -277,6 +320,7 @@ public sealed partial class MainWindow : Window
         {
             AddNavItems(
                 CreateSvgNavItem("Overview", "SubscriptionDetail", "subscriptions.svg"),
+                CreateSvgNavItem("Resource Groups", "ResourceGroups", "resourceGroups.svg"),
                 CreateSvgNavItem("Manage Tags", "ManageTags", "tags.svg"),
                 CreateSvgNavItem("Manage Locks", "ManageLocks", "locks.svg"),
                 CreateSvgNavItem("Preview Features", "PreviewFeatures", "previewFeatures.svg"));
@@ -286,7 +330,9 @@ public sealed partial class MainWindow : Window
         {
             var t when t == typeof(SubscriptionDetailPage) => "SubscriptionDetail",
             var t when t == typeof(FeaturesPage) || t == typeof(FeatureDetailPage) => "PreviewFeatures",
+            var t when t == typeof(ResourceGroupsPage) => "ResourceGroups",
             var t when t == typeof(ResourceGroupDetailPage) => "RGDetail",
+            var t when t == typeof(ResourcesPage) => "Resources",
             var t when t == typeof(ResourceDetailPage) => isAppGw ? "AppGwOverview" : "ResourceDetail",
             var t when t == typeof(TagsPage) => "ManageTags",
             var t when t == typeof(LocksPage) => "ManageLocks",
@@ -370,7 +416,7 @@ public sealed partial class MainWindow : Window
             {
                 case "ResourceDetail":
                 case "AppGwOverview":
-                    ContentFrame.Navigate(typeof(ResourceDetailPage), _activeNavContext);
+                    ContentFrame.Navigate(typeof(ResourceDetailPage), _activeNavContext with { Section = null, DetailItemName = null, PageLabel = null });
                     return;
                 case "ResourceTags":
                     ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { PageLabel = "Tags" });
@@ -411,7 +457,10 @@ public sealed partial class MainWindow : Window
             switch (tag)
             {
                 case "RGDetail":
-                    ContentFrame.Navigate(typeof(ResourceGroupDetailPage), _activeNavContext with { Resource = null });
+                    ContentFrame.Navigate(typeof(ResourceGroupDetailPage), _activeNavContext with { Resource = null, Section = null, DetailItemName = null, PageLabel = null });
+                    return;
+                case "Resources":
+                    ContentFrame.Navigate(typeof(ResourcesPage), _activeNavContext with { Resource = null, PageLabel = "Resources" });
                     return;
                 case "RGTags":
                     ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { Resource = null, PageLabel = "Tags" });
@@ -439,6 +488,9 @@ public sealed partial class MainWindow : Window
                     return;
                 case "PreviewFeatures":
                     ContentFrame.Navigate(typeof(FeaturesPage), new NavigationContext(_activeSubscription, PageLabel: "Preview Features"));
+                    return;
+                case "ResourceGroups":
+                    ContentFrame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_activeSubscription, PageLabel: "Resource Groups"));
                     return;
             }
         }

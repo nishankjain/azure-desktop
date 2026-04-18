@@ -20,7 +20,7 @@ public partial class ResourceProviderEntry : ObservableObject
     public int ResourceTypeCount => ResourceTypes.Count;
 }
 
-public partial class ResourceProvidersViewModel(IResourceProviderService resourceProviderService, OperationManager operationManager) : ObservableObject
+public partial class ResourceProvidersViewModel(IResourceProviderService resourceProviderService, OperationManager operationManager) : ObservableObject, ILoadable
 {
     private readonly List<ResourceProviderEntry> _allProviders = [];
     private string? _subscriptionId;

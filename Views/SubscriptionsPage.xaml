@@ -34,11 +34,6 @@
                 PlaceholderText="Search by name or ID..."
                 Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Command="{x:Bind ViewModel.LoadSubscriptionsCommand}" Content="Refresh" />
-            <ProgressRing
-                Width="24"
-                Height="24"
-                IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}"
-                Visibility="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
         </StackPanel>
 
         <!-- Sort buttons -->
