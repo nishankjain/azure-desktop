@@ -93,7 +93,8 @@ public sealed record NavigationContext(
         if (Section is not null)
         {
             var sectionCtx = this with { DetailItemName = null, PageLabel = null };
-            chain.Add((SectionToTitle(Section.Value), typeof(AppGwSectionPage), sectionCtx));
+            var sectionPageType = SectionToPageType(Section.Value);
+            chain.Add((SectionToTitle(Section.Value), sectionPageType, sectionCtx));
 
             if (DetailItemName is not null)
             {
@@ -125,5 +126,23 @@ public sealed record NavigationContext(
         AppGwSection.Waf => "WAF",
         AppGwSection.JwtValidation => "JWT Validation",
         _ => section.ToString(),
+    };
+
+    private static Type SectionToPageType(AppGwSection section) => section switch
+    {
+        AppGwSection.Overview => typeof(AppGwOverviewPage),
+        AppGwSection.BackendPools => typeof(AppGwBackendPoolsPage),
+        AppGwSection.BackendSettings => typeof(AppGwBackendSettingsPage),
+        AppGwSection.FrontendIP => typeof(AppGwFrontendIPPage),
+        AppGwSection.PrivateLink => typeof(AppGwPrivateLinkPage),
+        AppGwSection.SslSettings => typeof(AppGwSslSettingsPage),
+        AppGwSection.Listeners => typeof(AppGwListenersPage),
+        AppGwSection.RoutingRules => typeof(AppGwRoutingRulesPage),
+        AppGwSection.RewriteSets => typeof(AppGwRewriteSetsPage),
+        AppGwSection.HealthProbes => typeof(AppGwHealthProbesPage),
+        AppGwSection.Configuration => typeof(AppGwConfigurationPage),
+        AppGwSection.Waf => typeof(AppGwWafPage),
+        AppGwSection.JwtValidation => typeof(AppGwJwtValidationPage),
+        _ => typeof(AppGwOverviewPage),
     };
 }

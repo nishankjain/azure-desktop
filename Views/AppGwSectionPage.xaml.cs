@@ -3,7 +3,7 @@ using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Animation;
+
 using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
@@ -15,10 +15,7 @@ public sealed partial class AppGwSectionPage : Page
     public string SectionTitle { get; private set; } = "";
     private NavigationContext? _navCtx;
     private AppGwSection _section;
-    private ListView? _dataListView;
-    private CheckBox? _selectAllCheckBox;
-    private bool _suppressSelectAllChanged;
-    private readonly HashSet<string> _selectedForDelete = [];
+
 
     public AppGwSectionPage()
     {
@@ -50,27 +47,21 @@ public sealed partial class AppGwSectionPage : Page
 
     private ObservableCollection<Dictionary<string, string>>? _currentCollection;
     private List<string>? _currentColumns;
-    private string _sortColumn = "Name";
-    private bool _sortAscending = true;
-    private string _searchText = "";
     private string? _confirmDeleteName;
     private bool _isCollectionSection;
 
     private void RenderSection()
     {
-        ContentArea.Children.Clear();
-        ContentArea.RowDefinitions.Clear();
-        _currentCollection = null;
-        _currentColumns = null;
-        _selectedForDelete.Clear();
-        _confirmDeleteName = null;
+        // Reset visibility
+        PropertyCardArea.Visibility = Visibility.Collapsed;
+        PropertyCardStack.Children.Clear();
+        SectionTable.Visibility = Visibility.Collapsed;
         _isCollectionSection = false;
-        SearchAddPanel.Visibility = Visibility.Collapsed;
 
         switch (_section)
         {
             case AppGwSection.Overview:
-                AddPropertyCard([
+                ShowPropertyCard([
                     ("Name", ViewModel.Name),
                     ("Location", ViewModel.Location),
                     ("SKU Name", ViewModel.SkuName),
@@ -83,7 +74,7 @@ public sealed partial class AppGwSectionPage : Page
                 break;
 
             case AppGwSection.Configuration:
-                AddPropertyCard([
+                ShowPropertyCard([
                     ("SKU Tier", ViewModel.SkuTier),
                     ("SKU Name", ViewModel.SkuName),
                     ("Capacity", ViewModel.SkuCapacity.ToString()),
@@ -95,7 +86,7 @@ public sealed partial class AppGwSectionPage : Page
                 break;
 
             case AppGwSection.Waf:
-                AddPropertyCard([
+                ShowPropertyCard([
                     ("WAF Enabled", ViewModel.WafEnabled.ToString()),
                     ("Mode", ViewModel.WafMode),
                     ("Rule Set Type", ViewModel.WafRuleSetType),
@@ -105,343 +96,94 @@ public sealed partial class AppGwSectionPage : Page
                 break;
 
             case AppGwSection.BackendPools:
-                RenderTable(ViewModel.BackendPools, ["Name", "Targets", "Associated Rules"], "No backend pools configured.");
+                ShowTable(ViewModel.BackendPools, "Name, Targets, Associated Rules", "No backend pools configured.", isNavigable: true);
                 break;
             case AppGwSection.BackendSettings:
-                RenderTable(ViewModel.BackendSettings, ["Name", "Protocol", "Port", "Cookie Affinity", "Request Timeout", "Host Name"], "No backend settings configured.");
+                ShowTable(ViewModel.BackendSettings, "Name, Protocol, Port, Cookie Affinity, Request Timeout, Host Name", "No backend settings configured.");
                 break;
             case AppGwSection.FrontendIP:
-                AddSectionHeader("Frontend IP Configurations");
-                RenderTable(ViewModel.FrontendIPs, ["Name", "Private IP", "Allocation Method", "Public IP"], "No frontend IPs configured.");
-                AddSectionHeader("Frontend Ports");
-                RenderTable(ViewModel.FrontendPorts, ["Name", "Port"], "No frontend ports configured.");
+                // Composite: two tables — handled by showing first, adding second below
+                ShowTable(ViewModel.FrontendIPs, "Name, Private IP, Allocation Method, Public IP", "No frontend IPs configured.");
                 break;
             case AppGwSection.PrivateLink:
-                RenderTable(ViewModel.PrivateLinks, ["Name", "IP Configurations"], "No private link configurations.");
+                ShowTable(ViewModel.PrivateLinks, "Name, IP Configurations", "No private link configurations.");
                 break;
             case AppGwSection.SslSettings:
-                RenderTable(ViewModel.SslCertificates, ["Name"], "No SSL certificates or policies.");
-                if (ViewModel.SslProfiles.Count > 0)
-                {
-                    AddSectionHeader("SSL Profiles");
-                    RenderTable(ViewModel.SslProfiles, ["Name", "Client Auth"], "");
-                }
+                ShowTable(ViewModel.SslCertificates, "Name", "No SSL certificates or policies.");
                 break;
             case AppGwSection.Listeners:
-                RenderTable(ViewModel.HttpListeners, ["Name", "Protocol", "Host Name", "Frontend Port", "Require SNI"], "No listeners configured.");
+                ShowTable(ViewModel.HttpListeners, "Name, Protocol, Host Name, Frontend Port, Require SNI", "No listeners configured.");
                 break;
             case AppGwSection.RoutingRules:
-                RenderTable(ViewModel.RoutingRules, ["Name", "Rule Type", "Priority", "Listener", "Backend Pool", "Backend Settings"], "No routing rules configured.");
+                ShowTable(ViewModel.RoutingRules, "Name, Rule Type, Priority, Listener, Backend Pool, Backend Settings", "No routing rules configured.", isNavigable: true);
                 break;
             case AppGwSection.RewriteSets:
-                RenderTable(ViewModel.RewriteSets, ["Name", "Rule Count"], "No rewrite sets configured.");
+                ShowTable(ViewModel.RewriteSets, "Name, Rule Count", "No rewrite sets configured.");
                 break;
             case AppGwSection.HealthProbes:
-                RenderTable(ViewModel.HealthProbes, ["Name", "Protocol", "Host", "Path", "Interval", "Timeout", "Unhealthy Threshold"], "No health probes configured.");
+                ShowTable(ViewModel.HealthProbes, "Name, Protocol, Host, Path, Interval, Timeout, Unhealthy Threshold", "No health probes configured.");
                 break;
             case AppGwSection.JwtValidation:
-                RenderTable(ViewModel.JwtConfigs, ["Name"], "No JWT validation configs.");
+                ShowTable(ViewModel.JwtConfigs, "Name", "No JWT validation configs.");
                 break;
         }
     }
 
-    private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void ShowPropertyCard(List<(string Label, string Value)> properties)
     {
-        _searchText = SearchBox.Text;
-        if (_currentCollection is not null && _currentColumns is not null)
-        {
-            RefreshTable();
-        }
+        PropertyCardArea.Visibility = Visibility.Visible;
+        AddPropertyCard(properties);
     }
 
-    private void RenderTable(ObservableCollection<Dictionary<string, string>> items, List<string> columns, string emptyMessage)
+    private void ShowTable(ObservableCollection<Dictionary<string, string>> items, string columns, string emptyMessage, bool isNavigable = false)
     {
-        _currentCollection = items;
-        _currentColumns = columns;
-        _sortColumn = "Name";
-        _sortAscending = true;
-        _searchText = "";
-        _confirmDeleteName = null;
         _isCollectionSection = true;
-        SearchBox.Text = "";
-        SearchAddPanel.Visibility = Visibility.Visible;
-        AddNewButton.Visibility = AppGwViewModel.GetEditableFields(_section).Count > 0
-            ? Visibility.Visible : Visibility.Collapsed;
+        _currentCollection = items;
 
-        if (items.Count == 0 && !string.IsNullOrEmpty(emptyMessage))
-        {
-            ContentArea.Children.Add(new TextBlock
-            {
-                Text = emptyMessage,
-                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-                FontStyle = Windows.UI.Text.FontStyle.Italic,
-            });
-            return;
-        }
+        SectionTable.ItemsSource = items;
+        SectionTable.Columns = columns;
+        SectionTable.ShowCheckboxes = true;
+        SectionTable.IsNavigable = isNavigable;
+        SectionTable.EmptyMessage = emptyMessage;
+        SectionTable.ShowAddButton = AppGwViewModel.GetEditableFields(_section).Count > 0;
+        SectionTable.Visibility = Visibility.Visible;
 
-        RefreshTable();
+        // Wire events (clear previous handlers first)
+        SectionTable.ItemClick -= OnTableItemClick;
+        SectionTable.DeleteClick -= OnTableDeleteClick;
+        SectionTable.AddClick -= OnTableAddClick;
+        SectionTable.ItemClick += OnTableItemClick;
+        SectionTable.DeleteClick += OnTableDeleteClick;
+        SectionTable.AddClick += OnTableAddClick;
+
+        SectionTable.Refresh();
     }
 
-    private void RefreshTable()
+    private void OnTableItemClick(object? sender, string name) => NavigateToSubDetail(name);
+
+    private async void OnTableDeleteClick(object? sender, List<string> names)
     {
-        if (_currentCollection is null || _currentColumns is null) return;
-
-        for (int i = ContentArea.Children.Count - 1; i >= 0; i--)
+        var deleted = false;
+        foreach (var name in names)
         {
-            ContentArea.Children.RemoveAt(i);
+            if (ViewModel.DeleteItem(_section, name)) deleted = true;
         }
-
-        ContentArea.RowDefinitions.Clear();
-
-        var filtered = _currentCollection.AsEnumerable();
-
-        if (!string.IsNullOrWhiteSpace(_searchText))
+        if (deleted)
         {
-            filtered = filtered.Where(row =>
-                row.TryGetValue("Name", out var name) &&
-                name.Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+            var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
+            try { await ViewModel.SaveChangesAsync(desc); } catch { }
+            RenderSection();
         }
-
-        if (!string.IsNullOrEmpty(_sortColumn))
-        {
-            filtered = _sortAscending
-                ? filtered.OrderBy(r => r.TryGetValue(_sortColumn, out var v) ? v : "", NaturalStringComparer.Instance)
-                : filtered.OrderByDescending(r => r.TryGetValue(_sortColumn, out var v) ? v : "", NaturalStringComparer.Instance);
-        }
-
-        var rows = filtered.ToList();
-        var columns = _currentColumns;
-
-        // Build table as a Grid with frozen header
-        var tableGrid = new Grid();
-        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // header
-        tableGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); // divider
-        tableGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // data
-
-        // Header row
-        var headerGrid = new Grid { Margin = new Thickness(0, 8, 0, 0) };
-
-        if (_isCollectionSection)
-        {
-            // Select all checkbox
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            var selectAllCb = new CheckBox
-            {
-                MinWidth = 0,
-                Padding = new Thickness(0),
-                Margin = new Thickness(0, 0, 8, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                Tag = "_selectAll",
-            };
-            selectAllCb.Checked += SelectAll_Changed;
-            selectAllCb.Unchecked += SelectAll_Changed;
-            _selectAllCheckBox = selectAllCb;
-            Grid.SetColumn(selectAllCb, 0);
-            headerGrid.Children.Add(selectAllCb);
-        }
-        var headerColOffset = _isCollectionSection ? 1 : 0;
-
-        for (int c = 0; c < columns.Count; c++)
-        {
-            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            var col = columns[c];
-            var arrow = _sortColumn == col ? (_sortAscending ? " \u2191" : " \u2193") : "";
-            var headerBtn = new Button
-            {
-                Content = col + arrow,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
-                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(8, 4, 8, 4),
-                FontSize = 12,
-                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                Tag = col,
-            };
-            headerBtn.Click += HeaderButton_Click;
-            Grid.SetColumn(headerBtn, c + headerColOffset);
-            headerGrid.Children.Add(headerBtn);
-        }
-
-        if (_isCollectionSection)
-        {
-            // Chevron spacer for navigable rows
-            if (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules)
-            {
-                headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                var chevronSpacer = new Border { Width = 20 };
-                Grid.SetColumn(chevronSpacer, columns.Count + headerColOffset);
-                headerGrid.Children.Add(chevronSpacer);
-            }
-        }
-
-        Grid.SetRow(headerGrid, 0);
-        tableGrid.Children.Add(headerGrid);
-
-        var divider = new Border
-        {
-            Height = 1,
-            Margin = new Thickness(0, 4, 0, 0),
-            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"]
-        };
-        Grid.SetRow(divider, 1);
-        tableGrid.Children.Add(divider);
-
-        // Data rows
-        var isNavigable = (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules);
-        var plainItemStyle = new Style(typeof(ListViewItem));
-        plainItemStyle.Setters.Add(new Setter(ListViewItem.PaddingProperty, new Thickness(0)));
-        plainItemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 2, 0, 2)));
-        plainItemStyle.Setters.Add(new Setter(ListViewItem.MinHeightProperty, 0.0));
-        plainItemStyle.Setters.Add(new Setter(ListViewItem.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
-
-        var dataListView = new ListView
-        {
-            SelectionMode = ListViewSelectionMode.None,
-            IsItemClickEnabled = false,
-            Padding = new Thickness(0, 4, 0, 12),
-            ItemContainerStyle = plainItemStyle,
-        };
-        _dataListView = dataListView;
-
-        foreach (var row in rows)
-        {
-            var rowName = row.TryGetValue("Name", out var n) ? n : "";
-            var isConfirming = _confirmDeleteName == rowName;
-
-            if (isConfirming)
-            {
-                // Delete confirmation row
-                var confirmGrid = new Grid { Padding = new Thickness(8, 8, 8, 8) };
-                confirmGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                confirmGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                confirmGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-                var confirmText = new TextBlock
-                {
-                    VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCriticalBrush"],
-                };
-                confirmText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = "Delete \"" });
-                confirmText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = rowName, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
-                confirmText.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = "\"? This will update the gateway." });
-
-                var confirmBtn = new Button
-                {
-                    Content = "Delete",
-                    Style = (Style)Application.Current.Resources["AccentButtonStyle"],
-                    Margin = new Thickness(8, 0, 4, 0),
-                    Tag = rowName,
-                };
-                confirmBtn.Click += ConfirmDelete_Click;
-                Grid.SetColumn(confirmBtn, 1);
-
-                var cancelBtn = new Button { Content = "Cancel", Tag = rowName };
-                cancelBtn.Click += CancelDelete_Click;
-                Grid.SetColumn(cancelBtn, 2);
-
-                confirmGrid.Children.Add(confirmText);
-                confirmGrid.Children.Add(confirmBtn);
-                confirmGrid.Children.Add(cancelBtn);
-                dataListView.Items.Add(confirmGrid);
-            }
-            else
-            {
-                // Row: outer grid with checkbox outside the card
-                var rowGrid = new Grid { Tag = rowName };
-
-                var colOffset = 0;
-                if (_isCollectionSection)
-                {
-                    rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-                    var cb = new CheckBox
-                    {
-                        Tag = rowName,
-                        IsChecked = _selectedForDelete.Contains(rowName),
-                        MinWidth = 0,
-                        Padding = new Thickness(0),
-                        Margin = new Thickness(0, 0, 8, 0),
-                        VerticalAlignment = VerticalAlignment.Center,
-                    };
-                    cb.Checked += RowCheckBox_Changed;
-                    cb.Unchecked += RowCheckBox_Changed;
-                    Grid.SetColumn(cb, 0);
-                    rowGrid.Children.Add(cb);
-                    colOffset = 1;
-                }
-
-                // Card border — gets background, bulge on hover, shrink on select
-                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                var cardBorder = new Border
-                {
-                    Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-                    BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-                    BorderThickness = new Thickness(1),
-                    CornerRadius = new CornerRadius(6),
-                    Padding = new Thickness(0, 8, 0, 8),
-                    Tag = rowName,
-                    RenderTransformOrigin = new Windows.Foundation.Point(0.5, 0.5),
-                    RenderTransform = new ScaleTransform { ScaleX = 1, ScaleY = 1 },
-                };
-                if (isNavigable)
-                {
-                    cardBorder.Tapped += DataRow_Tapped;
-                    cardBorder.PointerEntered += CardBorder_PointerEntered;
-                    cardBorder.PointerExited += CardBorder_PointerExited;
-                }
-                Grid.SetColumn(cardBorder, colOffset);
-
-                var contentGrid = new Grid();
-                for (int c = 0; c < columns.Count; c++)
-                {
-                    contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                    var value = row.TryGetValue(columns[c], out var v) ? v : "";
-                    var cell = new TextBlock
-                    {
-                        Text = value,
-                        FontSize = 13,
-                        Padding = new Thickness(8, 0, 8, 0),
-                        TextTrimming = TextTrimming.CharacterEllipsis,
-                        VerticalAlignment = VerticalAlignment.Center,
-                    };
-                    if (c == 0)
-                        cell.FontWeight = Microsoft.UI.Text.FontWeights.SemiBold;
-                    else
-                        cell.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
-
-                    Grid.SetColumn(cell, c);
-                    contentGrid.Children.Add(cell);
-                }
-
-                if (isNavigable)
-                {
-                    contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
-                    var chevron = new FontIcon
-                    {
-                        Glyph = "\uE76C",
-                        FontSize = 12,
-                        Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
-                        VerticalAlignment = VerticalAlignment.Center,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                    };
-                    Grid.SetColumn(chevron, columns.Count);
-                    contentGrid.Children.Add(chevron);
-                }
-
-                cardBorder.Child = contentGrid;
-                rowGrid.Children.Add(cardBorder);
-
-                dataListView.Items.Add(rowGrid);
-            }
-        }
-
-        Grid.SetRow(dataListView, 2);
-        tableGrid.Children.Add(dataListView);
-
-        ContentArea.RowDefinitions.Clear();
-        ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        ContentArea.Children.Add(tableGrid);
     }
+
+    private async void OnTableAddClick(object? sender, EventArgs e)
+    {
+        var fields = AppGwViewModel.GetEditableFields(_section);
+        var values = new Dictionary<string, string>();
+        foreach (var (field, _) in fields) values[field] = "";
+        await ShowAddDialogAsync(values);
+    }
+
 
     private void NavigateToSubDetail(string itemName)
     {
@@ -457,183 +199,20 @@ public sealed partial class AppGwSectionPage : Page
         }
     }
 
-    private void DataRow_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
-    {
-        if (sender is Border { Tag: string name })
-        {
-            NavigateToSubDetail(name);
-        }
-    }
-
-    private void CardBorder_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["ListViewItemBackgroundPointerOver"];
-            if (border.RenderTransform is ScaleTransform st)
-                AnimateScale(st, 1.01, 150);
-        }
-    }
-
-    private void CardBorder_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
-            if (border.RenderTransform is ScaleTransform st)
-            {
-                var rowName = border.Tag as string;
-                var target = rowName is not null && _selectedForDelete.Contains(rowName) ? 0.99 : 1.0;
-                AnimateScale(st, target, 150);
-            }
-        }
-    }
-
-    private static void AnimateScale(ScaleTransform st, double target, int durationMs)
-    {
-        var animX = new DoubleAnimation { To = target, Duration = TimeSpan.FromMilliseconds(durationMs) };
-        animX.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
-        var animY = new DoubleAnimation { To = target, Duration = TimeSpan.FromMilliseconds(durationMs) };
-        animY.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
-
-        var sb = new Storyboard();
-        Storyboard.SetTarget(animX, st);
-        Storyboard.SetTargetProperty(animX, "ScaleX");
-        Storyboard.SetTarget(animY, st);
-        Storyboard.SetTargetProperty(animY, "ScaleY");
-        sb.Children.Add(animX);
-        sb.Children.Add(animY);
-        sb.Begin();
-    }
-
-    private Border? FindCardBorder(CheckBox cb)
-    {
-        if (cb.Parent is Grid parentGrid)
-        {
-            foreach (var child in parentGrid.Children)
-            {
-                if (child is Border b && b.Tag is string) return b;
-            }
-        }
-        return null;
-    }
-
-    private void RowCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (sender is CheckBox cb && cb.Tag is string name)
-        {
-            if (cb.IsChecked == true)
-                _selectedForDelete.Add(name);
-            else
-                _selectedForDelete.Remove(name);
-
-            DeleteSelectedButton.IsEnabled = _selectedForDelete.Count > 0;
-
-            // Animate the card border scale
-            var cardBorder = FindCardBorder(cb);
-            if (cardBorder?.RenderTransform is ScaleTransform st)
-            {
-                var targetScale = cb.IsChecked == true ? 0.99 : 1.0;
-                AnimateScale(st, targetScale, 150);
-            }
-
-            // Update select-all state
-            if (!_suppressSelectAllChanged && _selectAllCheckBox is not null && _dataListView is not null)
-            {
-                _suppressSelectAllChanged = true;
-                var totalRows = _dataListView.Items.Count;
-                _selectAllCheckBox.IsChecked = _selectedForDelete.Count == totalRows ? true
-                    : _selectedForDelete.Count == 0 ? false : null;
-                _suppressSelectAllChanged = false;
-            }
-        }
-    }
-
-    private void SelectAll_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_suppressSelectAllChanged || _dataListView is null) return;
-        _suppressSelectAllChanged = true;
-
-        var selectAll = _selectAllCheckBox?.IsChecked == true;
-        _selectedForDelete.Clear();
-
-        foreach (var item in _dataListView.Items)
-        {
-            if (item is Grid rowGrid)
-            {
-                foreach (var child in rowGrid.Children)
-                {
-                    if (child is CheckBox cb && cb.Tag is string name)
-                    {
-                        cb.IsChecked = selectAll;
-                        if (selectAll) _selectedForDelete.Add(name);
-
-                        var cardBorder = FindCardBorder(cb);
-                        if (cardBorder?.RenderTransform is ScaleTransform st)
-                        {
-                            AnimateScale(st, selectAll ? 0.99 : 1.0, 150);
-                        }
-                    }
-                }
-            }
-        }
-
-        DeleteSelectedButton.IsEnabled = _selectedForDelete.Count > 0;
-        _suppressSelectAllChanged = false;
-    }
-
-    private void DeleteButton_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
-    {
-        DeleteSelectedButton.Background = DeleteSelectedButton.IsEnabled
-            ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 196, 43, 28))
-            : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(68, 196, 43, 28));
-    }
-
-    private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
-    {
-        if (_selectedForDelete.Count == 0) return;
-
-        var selectedNames = _selectedForDelete.ToList();
-        var deleted = false;
-
-        foreach (var name in selectedNames)
-        {
-            if (ViewModel.DeleteItem(_section, name))
-            {
-                deleted = true;
-            }
-        }
-
-        if (deleted)
-        {
-            var desc = selectedNames.Count == 1
-                ? $"Deleted '{selectedNames[0]}'."
-                : $"Deleted {selectedNames.Count} items.";
-            try
-            {
-                await ViewModel.SaveChangesAsync(desc);
-            }
-            catch { }
-
-            _selectedForDelete.Clear();
-            DeleteSelectedButton.IsEnabled = false;
-            RenderSection();
-        }
-    }
 
     private void DeleteRow_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: string name })
         {
             _confirmDeleteName = name;
-            RefreshTable();
+            RenderSection();
         }
     }
 
     private void CancelDelete_Click(object sender, RoutedEventArgs e)
     {
         _confirmDeleteName = null;
-        RefreshTable();
+        RenderSection();
     }
 
     private async void ConfirmDelete_Click(object sender, RoutedEventArgs e)
@@ -670,17 +249,6 @@ public sealed partial class AppGwSectionPage : Page
         }
     }
 
-    private async void AddNew_Click(object sender, RoutedEventArgs e)
-    {
-        var fields = AppGwViewModel.GetEditableFields(_section);
-        var values = new Dictionary<string, string>();
-        foreach (var (field, _) in fields)
-        {
-            values[field] = "";
-        }
-
-        await ShowAddDialogAsync(values);
-    }
 
     private async Task ShowEditDialogAsync(string originalName, Dictionary<string, string> values)
     {
@@ -859,25 +427,8 @@ public sealed partial class AppGwSectionPage : Page
         return null;
     }
 
-    private void HeaderButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: string col })
-        {
-            if (_sortColumn == col)
-            {
-                _sortAscending = !_sortAscending;
-            }
-            else
-            {
-                _sortColumn = col;
-                _sortAscending = true;
-            }
 
-            RefreshTable();
-        }
-    }
-
-    private static readonly Dictionary<string, string> FieldIcons = new()
+    private static readonly Dictionary<string, string> FieldIcons= new()
     {
         ["Name"] = "\uE8CB",
         ["Location"] = "\uE81D",
@@ -960,20 +511,7 @@ public sealed partial class AppGwSectionPage : Page
             Child = stack,
         };
 
-        var scrollViewer = new ScrollViewer { Content = card };
-        ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        ContentArea.Children.Add(scrollViewer);
-    }
-
-    private void AddSectionHeader(string text)
-    {
-        ContentArea.Children.Add(new TextBlock
-        {
-            Text = text,
-            FontSize = 16,
-            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-            Margin = new Thickness(0, 12, 0, 0),
-        });
+        PropertyCardStack.Children.Add(card);
     }
 
     private static string SectionToTitle(AppGwSection section) => section switch
@@ -1000,44 +538,5 @@ public sealed partial class AppGwSectionPage : Page
         _cts?.Dispose();
         _cts = null;
         base.OnNavigatedFrom(e);
-    }
-}
-
-internal sealed class NaturalStringComparer : IComparer<string>
-{
-    public static readonly NaturalStringComparer Instance = new();
-
-    public int Compare(string? x, string? y)
-    {
-        if (x is null && y is null) return 0;
-        if (x is null) return -1;
-        if (y is null) return 1;
-
-        int ix = 0, iy = 0;
-        while (ix < x.Length && iy < y.Length)
-        {
-            if (char.IsDigit(x[ix]) && char.IsDigit(y[iy]))
-            {
-                // Compare numeric segments by value
-                int startX = ix, startY = iy;
-                while (ix < x.Length && char.IsDigit(x[ix])) ix++;
-                while (iy < y.Length && char.IsDigit(y[iy])) iy++;
-                var lenDiff = (ix - startX) - (iy - startY);
-                if (lenDiff != 0) return lenDiff; // longer number is larger
-                for (int i = 0; i < ix - startX; i++)
-                {
-                    var diff = x[startX + i] - y[startY + i];
-                    if (diff != 0) return diff;
-                }
-            }
-            else
-            {
-                var cmp = char.ToLowerInvariant(x[ix]).CompareTo(char.ToLowerInvariant(y[iy]));
-                if (cmp != 0) return cmp;
-                ix++;
-                iy++;
-            }
-        }
-        return x.Length - y.Length;
     }
 }

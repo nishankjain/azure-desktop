@@ -275,7 +275,20 @@ public sealed partial class MainWindow : Window
         // Show only actions for the current scope
         // Tags/Locks pages inherit their parent's scope
         var isTagsOrLocks = pageType == typeof(TagsPage) || pageType == typeof(LocksPage);
-        var isAppGwSection = pageType == typeof(AppGwSectionPage);
+        var isAppGwSection = pageType == typeof(AppGwSectionPage)
+            || pageType == typeof(AppGwOverviewPage)
+            || pageType == typeof(AppGwBackendPoolsPage)
+            || pageType == typeof(AppGwBackendSettingsPage)
+            || pageType == typeof(AppGwFrontendIPPage)
+            || pageType == typeof(AppGwPrivateLinkPage)
+            || pageType == typeof(AppGwSslSettingsPage)
+            || pageType == typeof(AppGwListenersPage)
+            || pageType == typeof(AppGwRoutingRulesPage)
+            || pageType == typeof(AppGwRewriteSetsPage)
+            || pageType == typeof(AppGwHealthProbesPage)
+            || pageType == typeof(AppGwConfigurationPage)
+            || pageType == typeof(AppGwWafPage)
+            || pageType == typeof(AppGwJwtValidationPage);
         var isAppGwSubDetail = pageType == typeof(AppGwBackendPoolDetailPage) || pageType == typeof(AppGwRoutingRuleDetailPage);
         var isAppGw = _activeNavContext?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true;
 
@@ -337,6 +350,19 @@ public sealed partial class MainWindow : Window
             var t when t == typeof(TagsPage) => "ManageTags",
             var t when t == typeof(LocksPage) => "ManageLocks",
             var t when t == typeof(AppGwSectionPage) => _lastAppGwNavTag,
+            var t when t == typeof(AppGwOverviewPage) => "AppGwOverview",
+            var t when t == typeof(AppGwBackendPoolsPage) => "AppGwBackendPools",
+            var t when t == typeof(AppGwBackendSettingsPage) => "AppGwBackendSettings",
+            var t when t == typeof(AppGwFrontendIPPage) => "AppGwFrontendIP",
+            var t when t == typeof(AppGwPrivateLinkPage) => "AppGwPrivateLink",
+            var t when t == typeof(AppGwSslSettingsPage) => "AppGwSsl",
+            var t when t == typeof(AppGwListenersPage) => "AppGwListeners",
+            var t when t == typeof(AppGwRoutingRulesPage) => "AppGwRoutingRules",
+            var t when t == typeof(AppGwRewriteSetsPage) => "AppGwRewriteSets",
+            var t when t == typeof(AppGwHealthProbesPage) => "AppGwHealthProbes",
+            var t when t == typeof(AppGwConfigurationPage) => "AppGwConfig",
+            var t when t == typeof(AppGwWafPage) => "AppGwWaf",
+            var t when t == typeof(AppGwJwtValidationPage) => "AppGwJwt",
             var t when t == typeof(AppGwBackendPoolDetailPage) => "AppGwBackendPools",
             var t when t == typeof(AppGwRoutingRuleDetailPage) => "AppGwRoutingRules",
             _ => null,
@@ -429,23 +455,24 @@ public sealed partial class MainWindow : Window
             // AppGW section nav
             if (tag?.StartsWith("AppGw") == true)
             {
-                var section = tag switch
+                var pageType = tag switch
                 {
-                    "AppGwBackendPools" => AppGwSection.BackendPools,
-                    "AppGwBackendSettings" => AppGwSection.BackendSettings,
-                    "AppGwFrontendIP" => AppGwSection.FrontendIP,
-                    "AppGwPrivateLink" => AppGwSection.PrivateLink,
-                    "AppGwSsl" => AppGwSection.SslSettings,
-                    "AppGwListeners" => AppGwSection.Listeners,
-                    "AppGwRoutingRules" => AppGwSection.RoutingRules,
-                    "AppGwRewriteSets" => AppGwSection.RewriteSets,
-                    "AppGwHealthProbes" => AppGwSection.HealthProbes,
-                    "AppGwConfig" => AppGwSection.Configuration,
-                    "AppGwWaf" => AppGwSection.Waf,
-                    "AppGwJwt" => AppGwSection.JwtValidation,
-                    _ => AppGwSection.Overview,
+                    "AppGwOverview" => typeof(AppGwOverviewPage),
+                    "AppGwBackendPools" => typeof(AppGwBackendPoolsPage),
+                    "AppGwBackendSettings" => typeof(AppGwBackendSettingsPage),
+                    "AppGwFrontendIP" => typeof(AppGwFrontendIPPage),
+                    "AppGwPrivateLink" => typeof(AppGwPrivateLinkPage),
+                    "AppGwSsl" => typeof(AppGwSslSettingsPage),
+                    "AppGwListeners" => typeof(AppGwListenersPage),
+                    "AppGwRoutingRules" => typeof(AppGwRoutingRulesPage),
+                    "AppGwRewriteSets" => typeof(AppGwRewriteSetsPage),
+                    "AppGwHealthProbes" => typeof(AppGwHealthProbesPage),
+                    "AppGwConfig" => typeof(AppGwConfigurationPage),
+                    "AppGwWaf" => typeof(AppGwWafPage),
+                    "AppGwJwt" => typeof(AppGwJwtValidationPage),
+                    _ => typeof(AppGwOverviewPage),
                 };
-                ContentFrame.Navigate(typeof(AppGwSectionPage), _activeNavContext with { Section = section, DetailItemName = null, PageLabel = null });
+                ContentFrame.Navigate(pageType, _activeNavContext with { DetailItemName = null, PageLabel = null });
                 return;
             }
         }
