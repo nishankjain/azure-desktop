@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:AzureDesktop.Controls"
     mc:Ignorable="d" NavigationCacheMode="Disabled">
 
     <Grid >
@@ -30,9 +31,8 @@
                 <Button x:Name="AddNewButton" Click="AddNew_Click" Style="{ThemeResource AccentButtonStyle}" ToolTipService.ToolTip="Add" AutomationProperties.Name="Add">
                     <FontIcon FontSize="14" Glyph="&#xE710;" />
                 </Button>
-                <Button x:Name="DeleteSelectedButton" Click="DeleteSelected_Click" IsEnabled="False" ToolTipService.ToolTip="Delete selected" AutomationProperties.Name="Delete" IsEnabledChanged="DeleteButton_IsEnabledChanged" Background="#44C42B1C">
-                    <FontIcon FontSize="14" Glyph="&#xE74D;" />
-                </Button>
+                <controls:DeleteButton x:Name="DeleteSelectedButton" Click="DeleteSelected_Click" IsEnabled="False" ToolTipService.ToolTip="Delete selected" />
+                
             </StackPanel>
         </Grid>
 

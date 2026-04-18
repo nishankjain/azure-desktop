@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
@@ -14,6 +16,8 @@ public sealed partial class AppGwSectionPage : Page
     private NavigationContext? _navCtx;
     private AppGwSection _section;
     private ListView? _dataListView;
+    private CheckBox? _selectAllCheckBox;
+    private bool _suppressSelectAllChanged;
     private readonly HashSet<string> _selectedForDelete = [];
 
     public AppGwSectionPage()
@@ -46,7 +50,7 @@ public sealed partial class AppGwSectionPage : Page
 
     private ObservableCollection<Dictionary<string, string>>? _currentCollection;
     private List<string>? _currentColumns;
-    private string _sortColumn = "";
+    private string _sortColumn = "Name";
     private bool _sortAscending = true;
     private string _searchText = "";
     private string? _confirmDeleteName;
@@ -154,7 +158,7 @@ public sealed partial class AppGwSectionPage : Page
     {
         _currentCollection = items;
         _currentColumns = columns;
-        _sortColumn = "";
+        _sortColumn = "Name";
         _sortAscending = true;
         _searchText = "";
         _confirmDeleteName = null;
@@ -201,8 +205,8 @@ public sealed partial class AppGwSectionPage : Page
         if (!string.IsNullOrEmpty(_sortColumn))
         {
             filtered = _sortAscending
-                ? filtered.OrderBy(r => r.TryGetValue(_sortColumn, out var v) ? v : "")
-                : filtered.OrderByDescending(r => r.TryGetValue(_sortColumn, out var v) ? v : "");
+                ? filtered.OrderBy(r => r.TryGetValue(_sortColumn, out var v) ? v : "", NaturalStringComparer.Instance)
+                : filtered.OrderByDescending(r => r.TryGetValue(_sortColumn, out var v) ? v : "", NaturalStringComparer.Instance);
         }
 
         var rows = filtered.ToList();
@@ -215,7 +219,28 @@ public sealed partial class AppGwSectionPage : Page
         tableGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) }); // data
 
         // Header row
-        var headerGrid = new Grid { Margin = new Thickness(12, 8, 12, 0) };
+        var headerGrid = new Grid { Margin = new Thickness(0, 8, 0, 0) };
+
+        if (_isCollectionSection)
+        {
+            // Select all checkbox
+            headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var selectAllCb = new CheckBox
+            {
+                MinWidth = 0,
+                Padding = new Thickness(0),
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Tag = "_selectAll",
+            };
+            selectAllCb.Checked += SelectAll_Changed;
+            selectAllCb.Unchecked += SelectAll_Changed;
+            _selectAllCheckBox = selectAllCb;
+            Grid.SetColumn(selectAllCb, 0);
+            headerGrid.Children.Add(selectAllCb);
+        }
+        var headerColOffset = _isCollectionSection ? 1 : 0;
+
         for (int c = 0; c < columns.Count; c++)
         {
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -234,13 +259,20 @@ public sealed partial class AppGwSectionPage : Page
                 Tag = col,
             };
             headerBtn.Click += HeaderButton_Click;
-            Grid.SetColumn(headerBtn, c);
+            Grid.SetColumn(headerBtn, c + headerColOffset);
             headerGrid.Children.Add(headerBtn);
         }
 
         if (_isCollectionSection)
         {
-            // No separate actions column - actions are in the toolbar
+            // Chevron spacer for navigable rows
+            if (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules)
+            {
+                headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                var chevronSpacer = new Border { Width = 20 };
+                Grid.SetColumn(chevronSpacer, columns.Count + headerColOffset);
+                headerGrid.Children.Add(chevronSpacer);
+            }
         }
 
         Grid.SetRow(headerGrid, 0);
@@ -249,23 +281,27 @@ public sealed partial class AppGwSectionPage : Page
         var divider = new Border
         {
             Height = 1,
-            Margin = new Thickness(12, 4, 12, 0),
+            Margin = new Thickness(0, 4, 0, 0),
             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"]
         };
         Grid.SetRow(divider, 1);
         tableGrid.Children.Add(divider);
 
         // Data rows
+        var isNavigable = (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules);
+        var plainItemStyle = new Style(typeof(ListViewItem));
+        plainItemStyle.Setters.Add(new Setter(ListViewItem.PaddingProperty, new Thickness(0)));
+        plainItemStyle.Setters.Add(new Setter(ListViewItem.MarginProperty, new Thickness(0, 2, 0, 2)));
+        plainItemStyle.Setters.Add(new Setter(ListViewItem.MinHeightProperty, 0.0));
+        plainItemStyle.Setters.Add(new Setter(ListViewItem.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
+
         var dataListView = new ListView
         {
             SelectionMode = ListViewSelectionMode.None,
-            IsItemClickEnabled = (_section == AppGwSection.BackendPools || _section == AppGwSection.RoutingRules),
-            Padding = new Thickness(12, 4, 12, 12),
+            IsItemClickEnabled = false,
+            Padding = new Thickness(0, 4, 0, 12),
+            ItemContainerStyle = plainItemStyle,
         };
-        if (dataListView.IsItemClickEnabled)
-        {
-            dataListView.ItemClick += DataListView_ItemClick;
-        }
         _dataListView = dataListView;
 
         foreach (var row in rows)
@@ -311,12 +347,12 @@ public sealed partial class AppGwSectionPage : Page
             }
             else
             {
-                // Normal data row
-                var rowGrid = new Grid { Padding = new Thickness(0, 6, 0, 6), Tag = rowName };
+                // Row: outer grid with checkbox outside the card
+                var rowGrid = new Grid { Tag = rowName };
 
+                var colOffset = 0;
                 if (_isCollectionSection)
                 {
-                    // Checkbox column for multi-select deletion
                     rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
                     var cb = new CheckBox
                     {
@@ -324,20 +360,41 @@ public sealed partial class AppGwSectionPage : Page
                         IsChecked = _selectedForDelete.Contains(rowName),
                         MinWidth = 0,
                         Padding = new Thickness(0),
-                        Margin = new Thickness(0, 0, 4, 0),
+                        Margin = new Thickness(0, 0, 8, 0),
                         VerticalAlignment = VerticalAlignment.Center,
                     };
                     cb.Checked += RowCheckBox_Changed;
                     cb.Unchecked += RowCheckBox_Changed;
                     Grid.SetColumn(cb, 0);
                     rowGrid.Children.Add(cb);
+                    colOffset = 1;
                 }
 
-                var colOffset = _isCollectionSection ? 1 : 0;
+                // Card border — gets background, bulge on hover, shrink on select
+                rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                var cardBorder = new Border
+                {
+                    Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
+                    BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+                    BorderThickness = new Thickness(1),
+                    CornerRadius = new CornerRadius(6),
+                    Padding = new Thickness(0, 8, 0, 8),
+                    Tag = rowName,
+                    RenderTransformOrigin = new Windows.Foundation.Point(0.5, 0.5),
+                    RenderTransform = new ScaleTransform { ScaleX = 1, ScaleY = 1 },
+                };
+                if (isNavigable)
+                {
+                    cardBorder.Tapped += DataRow_Tapped;
+                    cardBorder.PointerEntered += CardBorder_PointerEntered;
+                    cardBorder.PointerExited += CardBorder_PointerExited;
+                }
+                Grid.SetColumn(cardBorder, colOffset);
 
+                var contentGrid = new Grid();
                 for (int c = 0; c < columns.Count; c++)
                 {
-                    rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
                     var value = row.TryGetValue(columns[c], out var v) ? v : "";
                     var cell = new TextBlock
                     {
@@ -352,9 +409,27 @@ public sealed partial class AppGwSectionPage : Page
                     else
                         cell.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
 
-                    Grid.SetColumn(cell, c + colOffset);
-                    rowGrid.Children.Add(cell);
+                    Grid.SetColumn(cell, c);
+                    contentGrid.Children.Add(cell);
                 }
+
+                if (isNavigable)
+                {
+                    contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(20) });
+                    var chevron = new FontIcon
+                    {
+                        Glyph = "\uE76C",
+                        FontSize = 12,
+                        Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                        VerticalAlignment = VerticalAlignment.Center,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                    };
+                    Grid.SetColumn(chevron, columns.Count);
+                    contentGrid.Children.Add(chevron);
+                }
+
+                cardBorder.Child = contentGrid;
+                rowGrid.Children.Add(cardBorder);
 
                 dataListView.Items.Add(rowGrid);
             }
@@ -363,19 +438,9 @@ public sealed partial class AppGwSectionPage : Page
         Grid.SetRow(dataListView, 2);
         tableGrid.Children.Add(dataListView);
 
-        var tableBorder = new Border
-        {
-            Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Child = tableGrid,
-            Tag = "table",
-        };
-
         ContentArea.RowDefinitions.Clear();
         ContentArea.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-        ContentArea.Children.Add(tableBorder);
+        ContentArea.Children.Add(tableGrid);
     }
 
     private void NavigateToSubDetail(string itemName)
@@ -392,17 +457,129 @@ public sealed partial class AppGwSectionPage : Page
         }
     }
 
+    private void DataRow_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        if (sender is Border { Tag: string name })
+        {
+            NavigateToSubDetail(name);
+        }
+    }
+
+    private void CardBorder_PointerEntered(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["ListViewItemBackgroundPointerOver"];
+            if (border.RenderTransform is ScaleTransform st)
+                AnimateScale(st, 1.01, 150);
+        }
+    }
+
+    private void CardBorder_PointerExited(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
+            if (border.RenderTransform is ScaleTransform st)
+            {
+                var rowName = border.Tag as string;
+                var target = rowName is not null && _selectedForDelete.Contains(rowName) ? 0.99 : 1.0;
+                AnimateScale(st, target, 150);
+            }
+        }
+    }
+
+    private static void AnimateScale(ScaleTransform st, double target, int durationMs)
+    {
+        var animX = new DoubleAnimation { To = target, Duration = TimeSpan.FromMilliseconds(durationMs) };
+        animX.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
+        var animY = new DoubleAnimation { To = target, Duration = TimeSpan.FromMilliseconds(durationMs) };
+        animY.EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut };
+
+        var sb = new Storyboard();
+        Storyboard.SetTarget(animX, st);
+        Storyboard.SetTargetProperty(animX, "ScaleX");
+        Storyboard.SetTarget(animY, st);
+        Storyboard.SetTargetProperty(animY, "ScaleY");
+        sb.Children.Add(animX);
+        sb.Children.Add(animY);
+        sb.Begin();
+    }
+
+    private Border? FindCardBorder(CheckBox cb)
+    {
+        if (cb.Parent is Grid parentGrid)
+        {
+            foreach (var child in parentGrid.Children)
+            {
+                if (child is Border b && b.Tag is string) return b;
+            }
+        }
+        return null;
+    }
+
     private void RowCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox { Tag: string name })
+        if (sender is CheckBox cb && cb.Tag is string name)
         {
-            if (((CheckBox)sender).IsChecked == true)
+            if (cb.IsChecked == true)
                 _selectedForDelete.Add(name);
             else
                 _selectedForDelete.Remove(name);
 
             DeleteSelectedButton.IsEnabled = _selectedForDelete.Count > 0;
+
+            // Animate the card border scale
+            var cardBorder = FindCardBorder(cb);
+            if (cardBorder?.RenderTransform is ScaleTransform st)
+            {
+                var targetScale = cb.IsChecked == true ? 0.99 : 1.0;
+                AnimateScale(st, targetScale, 150);
+            }
+
+            // Update select-all state
+            if (!_suppressSelectAllChanged && _selectAllCheckBox is not null && _dataListView is not null)
+            {
+                _suppressSelectAllChanged = true;
+                var totalRows = _dataListView.Items.Count;
+                _selectAllCheckBox.IsChecked = _selectedForDelete.Count == totalRows ? true
+                    : _selectedForDelete.Count == 0 ? false : null;
+                _suppressSelectAllChanged = false;
+            }
         }
+    }
+
+    private void SelectAll_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_suppressSelectAllChanged || _dataListView is null) return;
+        _suppressSelectAllChanged = true;
+
+        var selectAll = _selectAllCheckBox?.IsChecked == true;
+        _selectedForDelete.Clear();
+
+        foreach (var item in _dataListView.Items)
+        {
+            if (item is Grid rowGrid)
+            {
+                foreach (var child in rowGrid.Children)
+                {
+                    if (child is CheckBox cb && cb.Tag is string name)
+                    {
+                        cb.IsChecked = selectAll;
+                        if (selectAll) _selectedForDelete.Add(name);
+
+                        var cardBorder = FindCardBorder(cb);
+                        if (cardBorder?.RenderTransform is ScaleTransform st)
+                        {
+                            AnimateScale(st, selectAll ? 0.99 : 1.0, 150);
+                        }
+                    }
+                }
+            }
+        }
+
+        DeleteSelectedButton.IsEnabled = _selectedForDelete.Count > 0;
+        _suppressSelectAllChanged = false;
     }
 
     private void DeleteButton_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -410,14 +587,6 @@ public sealed partial class AppGwSectionPage : Page
         DeleteSelectedButton.Background = DeleteSelectedButton.IsEnabled
             ? new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(255, 196, 43, 28))
             : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(68, 196, 43, 28));
-    }
-
-    private void DataListView_ItemClick(object sender, ItemClickEventArgs e)
-    {
-        if (e.ClickedItem is Grid { Tag: string name })
-        {
-            NavigateToSubDetail(name);
-        }
     }
 
     private async void DeleteSelected_Click(object sender, RoutedEventArgs e)
@@ -447,6 +616,7 @@ public sealed partial class AppGwSectionPage : Page
             catch { }
 
             _selectedForDelete.Clear();
+            DeleteSelectedButton.IsEnabled = false;
             RenderSection();
         }
     }
@@ -830,5 +1000,44 @@ public sealed partial class AppGwSectionPage : Page
         _cts?.Dispose();
         _cts = null;
         base.OnNavigatedFrom(e);
+    }
+}
+
+internal sealed class NaturalStringComparer : IComparer<string>
+{
+    public static readonly NaturalStringComparer Instance = new();
+
+    public int Compare(string? x, string? y)
+    {
+        if (x is null && y is null) return 0;
+        if (x is null) return -1;
+        if (y is null) return 1;
+
+        int ix = 0, iy = 0;
+        while (ix < x.Length && iy < y.Length)
+        {
+            if (char.IsDigit(x[ix]) && char.IsDigit(y[iy]))
+            {
+                // Compare numeric segments by value
+                int startX = ix, startY = iy;
+                while (ix < x.Length && char.IsDigit(x[ix])) ix++;
+                while (iy < y.Length && char.IsDigit(y[iy])) iy++;
+                var lenDiff = (ix - startX) - (iy - startY);
+                if (lenDiff != 0) return lenDiff; // longer number is larger
+                for (int i = 0; i < ix - startX; i++)
+                {
+                    var diff = x[startX + i] - y[startY + i];
+                    if (diff != 0) return diff;
+                }
+            }
+            else
+            {
+                var cmp = char.ToLowerInvariant(x[ix]).CompareTo(char.ToLowerInvariant(y[iy]));
+                if (cmp != 0) return cmp;
+                ix++;
+                iy++;
+            }
+        }
+        return x.Length - y.Length;
     }
 }
