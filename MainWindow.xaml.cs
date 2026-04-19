@@ -23,18 +23,20 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(AppTitleBar);
+        SetTitleBar(TitleBarDragRegion);
 
         AppWindow.SetIcon(System.IO.Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Assets", "AppIcon.ico"));
 
-        // Configure caption buttons to match title bar
+        // Configure caption buttons — colors set per theme
         var titleBar = AppWindow.TitleBar;
         titleBar.PreferredHeightOption = Microsoft.UI.Windowing.TitleBarHeightOption.Tall;
         titleBar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
         titleBar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-        titleBar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF);
-        titleBar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF);
         AppTitleBar.Padding = new Microsoft.UI.Xaml.Thickness(0, 0, titleBar.RightInset, 0);
+
+        // Update caption button colors when theme changes
+        (Content as FrameworkElement)!.ActualThemeChanged += (s, _) => UpdateTitleBarTheme();
+        AppTitleBar.Loaded += (_, _) => UpdateTitleBarTheme();
 
         ContentFrame.Navigated += ContentFrame_Navigated;
         NavView.DisplayModeChanged += NavView_DisplayModeChanged;
@@ -158,6 +160,26 @@ public sealed partial class MainWindow : Window
     {
     }
 
+    private void UpdateTitleBarTheme()
+    {
+        var titleBar = AppWindow.TitleBar;
+        var isDark = (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
+
+        var fgColor = isDark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
+        var hoverBg = isDark
+            ? Windows.UI.Color.FromArgb(0x20, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x20, 0x00, 0x00, 0x00);
+        var pressedBg = isDark
+            ? Windows.UI.Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x10, 0x00, 0x00, 0x00);
+
+        // Caption buttons (min/max/close)
+        titleBar.ButtonForegroundColor = fgColor;
+        titleBar.ButtonHoverForegroundColor = fgColor;
+        titleBar.ButtonHoverBackgroundColor = hoverBg;
+        titleBar.ButtonPressedBackgroundColor = pressedBg;
+    }
+
     private string? _lastAppGwNavTag;
 
     private void ContentFrame_Navigated(object sender, Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -170,7 +192,7 @@ public sealed partial class MainWindow : Window
             ? Visibility.Collapsed
             : Visibility.Visible;
 
-        while (ContentFrame.BackStack.Count > 5)
+        while(ContentFrame.BackStack.Count > 50)
         {
             ContentFrame.BackStack.RemoveAt(0);
         }
@@ -188,7 +210,6 @@ public sealed partial class MainWindow : Window
 
         DispatcherQueue.TryEnqueue(() =>
         {
-            // Build breadcrumbs and nav items after page's OnNavigatedTo has run
             if (ContentFrame.Content is INavigablePage navigable)
                 BreadcrumbNav.BuildFromPage(navigable, ContentFrame);
             else

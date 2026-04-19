@@ -48,7 +48,6 @@ public sealed class AzureAuthService : IAzureAuthService
         }
         catch
         {
-            // Cache expired, corrupted, or refresh token revoked
             return false;
         }
     }
@@ -57,12 +56,10 @@ public sealed class AzureAuthService : IAzureAuthService
     {
         var credential = CreateCredential();
 
-        // Interactive sign-in and capture the authentication record
         var record = await credential.AuthenticateAsync(
             new TokenRequestContext(ManagementScopes),
             cancellationToken);
 
-        // Persist the record so future launches can restore silently
         Directory.CreateDirectory(Path.GetDirectoryName(AuthRecordPath)!);
         await using var stream = File.Create(AuthRecordPath);
         await record.SerializeAsync(stream, cancellationToken);
@@ -82,7 +79,6 @@ public sealed class AzureAuthService : IAzureAuthService
         }
         catch
         {
-            // Best effort cleanup
         }
     }
 

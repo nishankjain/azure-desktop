@@ -23,6 +23,15 @@
 
         <!-- Custom title bar -->
         <Grid x:Name="AppTitleBar" Height="48" VerticalAlignment="Top">
+            <Grid.Resources>
+                <SolidColorBrush x:Key="ButtonBackground" Color="Transparent" />
+                <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#20808080" />
+                <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#10808080" />
+                <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+                <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+                <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+                <CornerRadius x:Key="ControlCornerRadius">0</CornerRadius>
+            </Grid.Resources>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -37,9 +46,7 @@
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Back"
-                Background="Transparent"
                 BorderThickness="0"
-                CornerRadius="0"
                 Click="BackButton_Click"
                 Visibility="Collapsed">
                 <FontIcon FontSize="14" Glyph="&#xE72B;" />
@@ -51,9 +58,7 @@
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Toggle navigation"
-                Background="Transparent"
                 BorderThickness="0"
-                CornerRadius="0"
                 Click="PaneToggle_Click"
                 Visibility="Visible">
                 <FontIcon FontSize="14" Glyph="&#xE700;" />
@@ -65,9 +70,7 @@
                 Padding="0"
                 VerticalAlignment="Stretch"
                 AutomationProperties.Name="Home"
-                Background="Transparent"
                 BorderThickness="0"
-                CornerRadius="0"
                 Click="HomeButton_Click"
                 ToolTipService.ToolTip="Home"
                 Visibility="Collapsed">
@@ -101,6 +104,9 @@
                         TextTrimming="CharacterEllipsis" />
                 </StackPanel>
             </Border>
+
+            <!-- Drag region for title bar (only this area is draggable) -->
+            <Border x:Name="TitleBarDragRegion" Grid.Column="4" Background="Transparent" />
         </Grid>
 
         <!-- Navigation view (no back button, no header) -->
