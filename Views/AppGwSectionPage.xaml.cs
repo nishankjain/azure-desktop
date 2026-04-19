@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -8,7 +9,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwSectionPage : Page
+public sealed partial class AppGwSectionPage : Page, INavigablePage
 {
     private CancellationTokenSource? _cts;
     public AppGwViewModel ViewModel { get; }
@@ -145,7 +146,7 @@ public sealed partial class AppGwSectionPage : Page
         SectionTable.ShowCheckboxes = true;
         SectionTable.IsNavigable = isNavigable;
         SectionTable.EmptyMessage = emptyMessage;
-        SectionTable.ShowAddButton = AppGwViewModel.GetEditableFields(_section).Count > 0;
+        SectionTable.ShowAddButton = GetFieldsForSection(_section).Count > 0;
         SectionTable.Visibility = Visibility.Visible;
 
         // Wire events (clear previous handlers first)
@@ -166,7 +167,7 @@ public sealed partial class AppGwSectionPage : Page
         var deleted = false;
         foreach (var name in names)
         {
-            if (ViewModel.DeleteItem(_section, name)) deleted = true;
+            if (DeleteForSection(_section, name)) deleted = true;
         }
         if (deleted)
         {
@@ -178,7 +179,7 @@ public sealed partial class AppGwSectionPage : Page
 
     private async void OnTableAddClick(object? sender, EventArgs e)
     {
-        var fields = AppGwViewModel.GetEditableFields(_section);
+        var fields = GetFieldsForSection(_section);
         var values = new Dictionary<string, string>();
         foreach (var (field, _) in fields) values[field] = "";
         await ShowAddDialogAsync(values);
@@ -220,7 +221,7 @@ public sealed partial class AppGwSectionPage : Page
         if (sender is Button { Tag: string name })
         {
             _confirmDeleteName = null;
-            var deleted = ViewModel.DeleteItem(_section, name);
+            var deleted = DeleteForSection(_section, name);
             if (deleted)
             {
                 try
@@ -252,7 +253,7 @@ public sealed partial class AppGwSectionPage : Page
 
     private async Task ShowEditDialogAsync(string originalName, Dictionary<string, string> values)
     {
-        var fields = AppGwViewModel.GetEditableFields(_section);
+        var fields = GetFieldsForSection(_section);
         if (fields.Count == 0) return;
 
         var editedValues = await ShowFieldDialogAsync($"Edit: {originalName}", fields, values, isEdit: true);
@@ -260,7 +261,7 @@ public sealed partial class AppGwSectionPage : Page
         {
             try
             {
-                var edited = ViewModel.EditItem(_section, originalName, editedValues);
+                var edited = EditForSection(_section, originalName, editedValues);
                 if (edited)
                 {
                     await ViewModel.SaveChangesAsync($"Updated '{originalName}'.");
@@ -277,7 +278,7 @@ public sealed partial class AppGwSectionPage : Page
 
     private async Task ShowAddDialogAsync(Dictionary<string, string> values)
     {
-        var fields = AppGwViewModel.GetEditableFields(_section);
+        var fields = GetFieldsForSection(_section);
         if (fields.Count == 0) return;
 
         var editedValues = await ShowFieldDialogAsync("Add New", fields, values, isEdit: false);
@@ -286,7 +287,7 @@ public sealed partial class AppGwSectionPage : Page
             var name = editedValues.GetValueOrDefault("Name") ?? "";
             try
             {
-                var added = ViewModel.AddItem(_section, editedValues);
+                var added = AddForSection(_section, editedValues);
                 if (added)
                 {
                     await ViewModel.SaveChangesAsync($"Added '{name}'.");
@@ -539,4 +540,89 @@ public sealed partial class AppGwSectionPage : Page
         _cts = null;
         base.OnNavigatedFrom(e);
     }
+
+    // Local dispatch helpers — route section enum to typed ViewModel methods
+    private static List<(string Field, string Placeholder)> GetFieldsForSection(AppGwSection section) => section switch
+    {
+        AppGwSection.BackendPools => AppGwViewModel.GetBackendPoolFields(),
+        AppGwSection.BackendSettings => AppGwViewModel.GetBackendSettingFields(),
+        AppGwSection.Listeners => AppGwViewModel.GetListenerFields(),
+        AppGwSection.RoutingRules => AppGwViewModel.GetRoutingRuleFields(),
+        AppGwSection.HealthProbes => AppGwViewModel.GetHealthProbeFields(),
+        AppGwSection.FrontendIP => AppGwViewModel.GetFrontendPortFields(),
+        AppGwSection.SslSettings => AppGwViewModel.GetSslCertificateFields(),
+        AppGwSection.RewriteSets => AppGwViewModel.GetRewriteSetFields(),
+        _ => [],
+    };
+
+    private bool DeleteForSection(AppGwSection section, string name) => section switch
+    {
+        AppGwSection.BackendPools => ViewModel.DeleteBackendPool(name),
+        AppGwSection.BackendSettings => ViewModel.DeleteBackendSetting(name),
+        AppGwSection.Listeners => ViewModel.DeleteListener(name),
+        AppGwSection.RoutingRules => ViewModel.DeleteRoutingRule(name),
+        AppGwSection.HealthProbes => ViewModel.DeleteHealthProbe(name),
+        AppGwSection.RewriteSets => ViewModel.DeleteRewriteSet(name),
+        AppGwSection.SslSettings => ViewModel.DeleteSslCertificate(name),
+        AppGwSection.PrivateLink => ViewModel.DeletePrivateLink(name),
+        _ => false,
+    };
+
+    private bool AddForSection(AppGwSection section, Dictionary<string, string> values) => section switch
+    {
+        AppGwSection.BackendPools => ViewModel.AddBackendPool(values),
+        AppGwSection.BackendSettings => ViewModel.AddBackendSetting(values),
+        AppGwSection.HealthProbes => ViewModel.AddHealthProbe(values),
+        AppGwSection.FrontendIP => ViewModel.AddFrontendPort(values),
+        AppGwSection.Listeners => ViewModel.AddListener(values),
+        AppGwSection.RoutingRules => ViewModel.AddRoutingRule(values),
+        _ => false,
+    };
+
+    private bool EditForSection(AppGwSection section, string originalName, Dictionary<string, string> values) => section switch
+    {
+        AppGwSection.BackendPools => ViewModel.EditBackendPool(originalName, values),
+        AppGwSection.BackendSettings => ViewModel.EditBackendSetting(originalName, values),
+        AppGwSection.Listeners => ViewModel.EditListener(originalName, values),
+        AppGwSection.HealthProbes => ViewModel.EditHealthProbe(originalName, values),
+        AppGwSection.RoutingRules => ViewModel.EditRoutingRule(originalName, values),
+        _ => false,
+    };
+
+    // INavigablePage
+    public BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var ctx = _navCtx!;
+        var subCtx = ctx with { ResourceGroupName = null, Resource = null, Section = null, DetailItemName = null };
+        var rgCtx = ctx with { Resource = null, Section = null, DetailItemName = null };
+        var gwCtx = ctx with { Section = null, DetailItemName = null };
+        return [
+            new("Subscriptions", typeof(SubscriptionsPage), subCtx),
+            new("Subscription", typeof(SubscriptionDetailPage), subCtx),
+            new("Resource Groups", typeof(ResourceGroupsPage), rgCtx),
+            new("Resource Group", typeof(ResourceGroupDetailPage), rgCtx),
+            new("Application Gateway", typeof(AppGwOverviewPage), gwCtx),
+            new(SectionTitle, null, null),
+        ];
+    }
+
+    public NavItemDefinition[] GetNavItems() => AppGwNavItems.Get();
+
+    public string? ActiveNavTag => _section switch
+    {
+        AppGwSection.Overview => "AppGwOverview",
+        AppGwSection.BackendPools => "AppGwBackendPools",
+        AppGwSection.BackendSettings => "AppGwBackendSettings",
+        AppGwSection.FrontendIP => "AppGwFrontendIP",
+        AppGwSection.PrivateLink => "AppGwPrivateLink",
+        AppGwSection.SslSettings => "AppGwSsl",
+        AppGwSection.Listeners => "AppGwListeners",
+        AppGwSection.RoutingRules => "AppGwRoutingRules",
+        AppGwSection.RewriteSets => "AppGwRewriteSets",
+        AppGwSection.HealthProbes => "AppGwHealthProbes",
+        AppGwSection.Configuration => "AppGwConfig",
+        AppGwSection.Waf => "AppGwWaf",
+        AppGwSection.JwtValidation => "AppGwJwt",
+        _ => null,
+    };
 }

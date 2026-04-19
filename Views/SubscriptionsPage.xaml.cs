@@ -1,3 +1,4 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -5,7 +6,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class SubscriptionsPage : Page
+public sealed partial class SubscriptionsPage : Page, INavigablePage
 {
     private CancellationTokenSource? _cts;
     public SubscriptionsViewModel ViewModel { get; }
@@ -44,6 +45,10 @@ public sealed partial class SubscriptionsPage : Page
             Frame.Navigate(typeof(SubscriptionDetailPage), new NavigationContext(item));
         }
     }
+
+    public BreadcrumbEntry[] GetBreadcrumbs() => [new("Subscriptions", null, null)];
+    public NavItemDefinition[] GetNavItems() => [];
+    public string? ActiveNavTag => null;
 
     private void SortByName_Click(object sender, RoutedEventArgs e)
     {

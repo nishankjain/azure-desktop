@@ -2,41 +2,20 @@ using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwSslSettingsPage : Page
+public sealed partial class AppGwSslSettingsPage : AppGwPageBase
 {
-    private const AppGwSection Section = AppGwSection.SslSettings;
-    private CancellationTokenSource? _cts;
-    private NavigationContext? _navCtx;
-    public AppGwViewModel ViewModel { get; }
+    public override string PageLabel => "SSL Settings";
+    public override string? ActiveNavTag => "AppGwSsl";
 
     public AppGwSslSettingsPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
-        {
-            _navCtx = ctx;
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-            Render();
-        }
-    }
-
-    private void Render()
+    protected override void OnDataLoaded()
     {
         // SSL Certificates table
         CertificatesTable.ItemsSource = ViewModel.SslCertificates;
@@ -44,7 +23,7 @@ public sealed partial class AppGwSslSettingsPage : Page
         CertificatesTable.ShowCheckboxes = true;
         CertificatesTable.IsNavigable = false;
         CertificatesTable.EmptyMessage = "No SSL certificates or policies.";
-        CertificatesTable.ShowAddButton = AppGwViewModel.GetEditableFields(Section).Count > 0;
+        CertificatesTable.ShowAddButton = AppGwViewModel.GetSslCertificateFields().Count > 0;
 
         CertificatesTable.ItemClick -= OnCertItemClick;
         CertificatesTable.DeleteClick -= OnCertDeleteClick;
@@ -86,19 +65,24 @@ public sealed partial class AppGwSslSettingsPage : Page
         var deleted = false;
         foreach (var name in names)
         {
-            if (ViewModel.DeleteItem(Section, name)) deleted = true;
+            if (ViewModel.DeleteSslCertificate(name)) deleted = true;
         }
         if (deleted)
         {
             var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
             try { await ViewModel.SaveChangesAsync(desc); } catch { }
-            Render();
+            OnDataLoaded();
         }
     }
 
     private async void OnCertAddClick(object? sender, EventArgs e)
     {
-        await AppGwDialogHelper.ShowAddDialogAsync(XamlRoot, ViewModel, Section, Render);
+        await AppGwDialogHelper.ShowAddDialogAsync(
+            XamlRoot,
+            AppGwViewModel.GetSslCertificateFields(),
+            _ => false,
+            async desc => { await ViewModel.SaveChangesAsync(desc); },
+            OnDataLoaded);
     }
 
     private async void OnProfileDeleteClick(object? sender, List<string> names)
@@ -106,21 +90,13 @@ public sealed partial class AppGwSslSettingsPage : Page
         var deleted = false;
         foreach (var name in names)
         {
-            if (ViewModel.DeleteItem(Section, name)) deleted = true;
+            if (ViewModel.DeleteSslCertificate(name)) deleted = true;
         }
         if (deleted)
         {
             var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
             try { await ViewModel.SaveChangesAsync(desc); } catch { }
-            Render();
+            OnDataLoaded();
         }
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

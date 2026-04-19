@@ -1,17 +1,32 @@
 using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class ResourceDetailPage : Page
+public sealed partial class ResourceDetailPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => NavCtx?.Resource?.SingularType ?? "Resource";
+    protected override bool IsOverviewPage => true;
+    public override string? ActiveNavTag
+    {
+        get
+        {
+            if (NavCtx?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true)
+                return "AppGwOverview";
+            return "ResourceDetail";
+        }
+    }
+    public override NavItemDefinition[] GetNavItems()
+    {
+        if (NavCtx?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true)
+            return AppGwNavItems.Get();
+        return ResourceNavItems.Get(NavCtx?.Resource?.Type ?? "");
+    }
+
     public ResourceDetailViewModel ViewModel { get; }
     public ObservableCollection<string> BreadcrumbItems { get; } = [];
-
-    private NavigationContext? _navCtx;
 
     public ResourceDetailPage()
     {
@@ -19,28 +34,12 @@ public sealed partial class ResourceDetailPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx && ctx.Resource is not null)
+        if (ctx?.Resource is not null)
         {
-            _navCtx = ctx;
-
             ResourceIcon.Source = new Microsoft.UI.Xaml.Media.Imaging.SvgImageSource(new Uri(ctx.Resource.IconPath));
-
-            _ = ViewModel.LoadAsync(ctx.Resource, _cts.Token);
+            _ = ViewModel.LoadAsync(ctx.Resource, Cts!.Token);
         }
-    }
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

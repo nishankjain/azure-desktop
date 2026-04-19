@@ -1,13 +1,16 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class FeaturesPage : Page
+public sealed partial class FeaturesPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Preview Features";
+    public override string? ActiveNavTag => "PreviewFeatures";
+    public override NavItemDefinition[] GetNavItems() => SubscriptionNavItems.Get();
+
     public FeaturesViewModel ViewModel { get; }
     private SubscriptionItem? _subItem;
 
@@ -17,18 +20,12 @@ public sealed partial class FeaturesPage : Page
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
+        if (ctx is not null)
         {
             _subItem = ctx.Subscription;
-
-            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId, _cts.Token);
+            await ViewModel.LoadProvidersAsync(ctx.SubscriptionId, Cts!.Token);
         }
     }
 
@@ -54,13 +51,5 @@ public sealed partial class FeaturesPage : Page
         {
             Frame.Navigate(typeof(FeatureDetailPage), (ViewModel.SearchResult, _subItem));
         }
-    }
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

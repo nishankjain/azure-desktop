@@ -18,11 +18,11 @@ public static class AppGwDialogHelper
 
     public static async Task<bool> ShowAddDialogAsync(
         XamlRoot xamlRoot,
-        AppGwViewModel viewModel,
-        AppGwSection section,
-        Action renderSection)
+        List<(string Field, string Placeholder)> fields,
+        Func<Dictionary<string, string>, bool> addFunc,
+        Func<string, Task> saveFunc,
+        Action renderFunc)
     {
-        var fields = AppGwViewModel.GetEditableFields(section);
         if (fields.Count == 0) return false;
 
         var values = new Dictionary<string, string>();
@@ -34,15 +34,15 @@ public static class AppGwDialogHelper
             var name = editedValues.GetValueOrDefault("Name") ?? "";
             try
             {
-                var added = viewModel.AddItem(section, editedValues);
+                var added = addFunc(editedValues);
                 if (added)
                 {
-                    await viewModel.SaveChangesAsync($"Added '{name}'.");
+                    await saveFunc($"Added '{name}'.");
                 }
             }
             catch { }
 
-            renderSection();
+            renderFunc();
             return true;
         }
         return false;
@@ -50,13 +50,13 @@ public static class AppGwDialogHelper
 
     public static async Task<bool> ShowEditDialogAsync(
         XamlRoot xamlRoot,
-        AppGwViewModel viewModel,
-        AppGwSection section,
+        List<(string Field, string Placeholder)> fields,
         string originalName,
         Dictionary<string, string> values,
-        Action renderSection)
+        Func<string, Dictionary<string, string>, bool> editFunc,
+        Func<string, Task> saveFunc,
+        Action renderFunc)
     {
-        var fields = AppGwViewModel.GetEditableFields(section);
         if (fields.Count == 0) return false;
 
         var editedValues = await ShowFieldDialogAsync(xamlRoot, $"Edit: {originalName}", fields, values, isEdit: true);
@@ -64,15 +64,15 @@ public static class AppGwDialogHelper
         {
             try
             {
-                var edited = viewModel.EditItem(section, originalName, editedValues);
+                var edited = editFunc(originalName, editedValues);
                 if (edited)
                 {
-                    await viewModel.SaveChangesAsync($"Updated '{originalName}'.");
+                    await saveFunc($"Updated '{originalName}'.");
                 }
             }
             catch { }
 
-            renderSection();
+            renderFunc();
             return true;
         }
         return false;

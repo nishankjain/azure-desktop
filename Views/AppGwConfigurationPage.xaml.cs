@@ -3,40 +3,20 @@ using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwConfigurationPage : Page
+public sealed partial class AppGwConfigurationPage : AppGwPageBase
 {
-    private CancellationTokenSource? _cts;
-    private NavigationContext? _navCtx;
-    public AppGwViewModel ViewModel { get; }
+    public override string PageLabel => "Configuration";
+    public override string? ActiveNavTag => "AppGwConfig";
 
     public AppGwConfigurationPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
-        {
-            _navCtx = ctx;
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-            Render();
-        }
-    }
-
-    private void Render()
+    protected override void OnDataLoaded()
     {
         PropertyCardStack.Children.Clear();
         AddPropertyCard([
@@ -113,13 +93,5 @@ public sealed partial class AppGwConfigurationPage : Page
         };
 
         PropertyCardStack.Children.Add(card);
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

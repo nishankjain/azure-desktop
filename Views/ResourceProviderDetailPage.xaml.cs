@@ -1,3 +1,4 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.Services;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
@@ -6,9 +7,9 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class ResourceProviderDetailPage : Page
+public sealed partial class ResourceProviderDetailPage : Page, INavigablePage
 {
-
+    private NavigationContext? _navCtx;
     private ResourceProviderEntry? _entry;
     private SubscriptionItem? _subItem;
     private IReadOnlyList<ResourceTypeInfo> _allResourceTypes = [];
@@ -40,6 +41,7 @@ public sealed partial class ResourceProviderDetailPage : Page
 
         if (e.Parameter is NavigationContext ctx && ctx.ResourceProvider is not null)
         {
+            _navCtx = ctx;
             _entry = ctx.ResourceProvider;
             _subItem = ctx.Subscription;
             _allResourceTypes = ctx.ResourceProvider.ResourceTypes;
@@ -47,6 +49,21 @@ public sealed partial class ResourceProviderDetailPage : Page
             Bindings.Update();
         }
     }
+
+    public BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var ctx = _navCtx!;
+        var subCtx = ctx with { ResourceGroupName = null, Resource = null, Section = null, DetailItemName = null };
+        var rpCtx = ctx with { ResourceProvider = null };
+        return [
+            new("Subscriptions", typeof(SubscriptionsPage), subCtx),
+            new("Subscription", typeof(SubscriptionDetailPage), subCtx),
+            new("Resource Providers", typeof(ResourceProvidersPage), rpCtx),
+            new("Resource Provider", null, null),
+        ];
+    }
+    public NavItemDefinition[] GetNavItems() => SubscriptionNavItems.Get();
+    public string? ActiveNavTag => null;
 
     private void ResourceTypeSearch_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {

@@ -1,13 +1,16 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class ResourceGroupsPage : Page
+public sealed partial class ResourceGroupsPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Resource Groups";
+    public override string? ActiveNavTag => "ResourceGroups";
+    public override NavItemDefinition[] GetNavItems() => SubscriptionNavItems.Get();
+
     public ResourceGroupsViewModel ViewModel { get; }
 
     private SubscriptionItem? _sub;
@@ -19,17 +22,12 @@ public sealed partial class ResourceGroupsPage : Page
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
+        if (ctx is not null)
         {
             _sub = ctx.Subscription;
-            await ViewModel.LoadForSubscriptionAsync(ctx.Subscription, _cts.Token);
+            await ViewModel.LoadForSubscriptionAsync(ctx.Subscription, Cts!.Token);
         }
     }
 
@@ -77,13 +75,5 @@ public sealed partial class ResourceGroupsPage : Page
         ViewModel.ToggleSort("Name");
         var arrow = ViewModel.SortAscending ? "↑" : "↓";
         SortNameButton.Content = $"Name {arrow}";
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

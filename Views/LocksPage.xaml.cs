@@ -1,13 +1,25 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class LocksPage : Page
+public sealed partial class LocksPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Locks";
+    public override string? ActiveNavTag => "Locks";
+    public override NavItemDefinition[] GetNavItems()
+    {
+        if (NavCtx?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true)
+            return AppGwNavItems.Get();
+        if (NavCtx?.Resource is not null)
+            return ResourceNavItems.Get(NavCtx.Resource.Type);
+        if (NavCtx?.ResourceGroupName is not null)
+            return ResourceGroupNavItems.Get();
+        return SubscriptionNavItems.Get();
+    }
+
     public LockManagerViewModel ViewModel { get; }
 
     public LocksPage()
@@ -16,17 +28,12 @@ public sealed partial class LocksPage : Page
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
+        if (ctx is not null)
         {
             var resourceId = GetResourceId(ctx);
-            await ViewModel.LoadLocksAsync(resourceId, _cts.Token);
+            await ViewModel.LoadLocksAsync(resourceId, Cts!.Token);
         }
     }
 
@@ -37,6 +44,17 @@ public sealed partial class LocksPage : Page
         if (ctx.ResourceGroupName is not null)
             return $"/subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}";
         return $"/subscriptions/{ctx.SubscriptionId}";
+    }
+
+    public override BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var ctx = NavCtx!;
+        var chain = ctx.BuildBreadcrumbChain();
+        var result = new List<BreadcrumbEntry>();
+        foreach (var (label, pageType, navCtx) in chain)
+            result.Add(new BreadcrumbEntry(label, pageType, navCtx));
+        result.Add(new BreadcrumbEntry("Locks", null, null));
+        return result.ToArray();
     }
 
     private void EditLock_Click(object sender, RoutedEventArgs e)
@@ -69,13 +87,5 @@ public sealed partial class LocksPage : Page
     {
         if (sender is Button { Tag: LockEntry entry })
             await ViewModel.ConfirmDeleteCommand.ExecuteAsync(entry);
-    }
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

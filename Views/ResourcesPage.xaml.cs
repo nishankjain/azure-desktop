@@ -1,16 +1,17 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class ResourcesPage : Page
+public sealed partial class ResourcesPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
-    public ResourcesViewModel ViewModel { get; }
+    public override string PageLabel => "Resources";
+    public override string? ActiveNavTag => "Resources";
+    public override NavItemDefinition[] GetNavItems() => ResourceGroupNavItems.Get();
 
-    private NavigationContext? _navCtx;
+    public ResourcesViewModel ViewModel { get; }
     private bool _suppressFilterEvents;
 
     public ResourcesPage()
@@ -19,19 +20,12 @@ public sealed partial class ResourcesPage : Page
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx && ctx.ResourceGroupName is not null)
+        if (ctx?.ResourceGroupName is not null)
         {
-            _navCtx = ctx;
-
             await ViewModel.LoadForResourceGroupAsync(
-                ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, _cts.Token);
+                ctx.SubscriptionId, ctx.SubscriptionName, ctx.ResourceGroupName, Cts!.Token);
 
             GroupedResourcesSource.Source = ViewModel.GroupedResources;
         }
@@ -39,9 +33,9 @@ public sealed partial class ResourcesPage : Page
 
     private void Resource_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is ResourceItem item && _navCtx is not null)
+        if (e.ClickedItem is ResourceItem item && NavCtx is not null)
         {
-            Frame.Navigate(typeof(ResourceDetailPage), _navCtx with { Resource = item });
+            Frame.Navigate(typeof(ResourceDetailPage), NavCtx with { Resource = item });
         }
     }
 
@@ -121,13 +115,5 @@ public sealed partial class ResourcesPage : Page
         SortNameButton.Content = ViewModel.SortField == "Name" ? $"Name {arrow}" : "Name";
         SortTypeButton.Content = ViewModel.SortField == "Type" ? $"Type {arrow}" : "Type";
         SortLocationButton.Content = ViewModel.SortField == "Location" ? $"Location {arrow}" : "Location";
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

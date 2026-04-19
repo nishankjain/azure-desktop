@@ -1,41 +1,19 @@
 using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwFrontendIPPage : Page
+public sealed partial class AppGwFrontendIPPage : AppGwPageBase
 {
-    private const AppGwSection Section = AppGwSection.FrontendIP;
-    private CancellationTokenSource? _cts;
-    private NavigationContext? _navCtx;
-    public AppGwViewModel ViewModel { get; }
+    public override string PageLabel => "Frontend IP";
+    public override string? ActiveNavTag => "AppGwFrontendIP";
 
     public AppGwFrontendIPPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
-        {
-            _navCtx = ctx;
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-            Render();
-        }
-    }
-
-    private void Render()
+    protected override void OnDataLoaded()
     {
         // Frontend IP Configurations table
         FrontendIPTable.ItemsSource = ViewModel.FrontendIPs;
@@ -43,7 +21,7 @@ public sealed partial class AppGwFrontendIPPage : Page
         FrontendIPTable.ShowCheckboxes = true;
         FrontendIPTable.IsNavigable = false;
         FrontendIPTable.EmptyMessage = "No frontend IPs configured.";
-        FrontendIPTable.ShowAddButton = AppGwViewModel.GetEditableFields(Section).Count > 0;
+        FrontendIPTable.ShowAddButton = AppGwViewModel.GetFrontendPortFields().Count > 0;
 
         FrontendIPTable.ItemClick -= OnIPItemClick;
         FrontendIPTable.DeleteClick -= OnIPDeleteClick;
@@ -72,22 +50,17 @@ public sealed partial class AppGwFrontendIPPage : Page
 
     private async void OnIPDeleteClick(object? sender, List<string> names)
     {
-        var deleted = false;
-        foreach (var name in names)
-        {
-            if (ViewModel.DeleteItem(Section, name)) deleted = true;
-        }
-        if (deleted)
-        {
-            var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
-            try { await ViewModel.SaveChangesAsync(desc); } catch { }
-            Render();
-        }
+        // Frontend IPs cannot be deleted — no-op
     }
 
     private async void OnIPAddClick(object? sender, EventArgs e)
     {
-        await AppGwDialogHelper.ShowAddDialogAsync(XamlRoot, ViewModel, Section, Render);
+        await AppGwDialogHelper.ShowAddDialogAsync(
+            XamlRoot,
+            AppGwViewModel.GetFrontendPortFields(),
+            ViewModel.AddFrontendPort,
+            async desc => { await ViewModel.SaveChangesAsync(desc); },
+            OnDataLoaded);
     }
 
     private async void OnPortDeleteClick(object? sender, List<string> names)
@@ -95,21 +68,13 @@ public sealed partial class AppGwFrontendIPPage : Page
         var deleted = false;
         foreach (var name in names)
         {
-            if (ViewModel.DeleteItem(Section, name)) deleted = true;
+            if (ViewModel.DeleteFrontendPort(name)) deleted = true;
         }
         if (deleted)
         {
             var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
             try { await ViewModel.SaveChangesAsync(desc); } catch { }
-            Render();
+            OnDataLoaded();
         }
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

@@ -1,4 +1,5 @@
 using Azure.ResourceManager.Network.Models;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,11 +7,11 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwRoutingRuleDetailPage : Page
+public sealed partial class AppGwRoutingRuleDetailPage : AppGwPageBase
 {
-    private CancellationTokenSource? _cts;
-    public AppGwViewModel ViewModel { get; }
-    private NavigationContext? _navCtx;
+    public override string PageLabel => "Routing Rule";
+    public override string? ActiveNavTag => "AppGwRoutingRules";
+
     private string _ruleName = "";
 
     // Form controls
@@ -42,13 +43,31 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
 
     public AppGwRoutingRuleDetailPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         InitializeComponent();
     }
 
-    /// <summary>
-    /// Ensures the ComboBox dropdown opens scrolled to the top instead of centered on the selected item.
-    /// </summary>
+    protected override void OnContextReady(NavigationContext? ctx)
+    {
+        if (ctx?.DetailItemName is not null)
+        {
+            _ruleName = ctx.DetailItemName;
+            TitleText.Text = ctx.DetailItemName;
+        }
+        base.OnContextReady(ctx);
+    }
+
+    protected override void OnDataLoaded()
+    {
+        RenderForm();
+    }
+
+    public override BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var baseCrumbs = base.GetBreadcrumbs();
+        var list = baseCrumbs.ToList();
+        list.Insert(list.Count - 1, new("Routing Rules", typeof(AppGwRoutingRulesPage), NavCtx with { DetailItemName = null }));
+        return list.ToArray();
+    }
     private static void ScrollDropDownToTop(ComboBox combo)
     {
         combo.DropDownOpened += (s, _) =>
@@ -91,28 +110,6 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
         if (name is null) return null;
         var idx = name.LastIndexOf('/');
         return idx >= 0 ? name[(idx + 1)..] : name;
-    }
-
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
-        {
-            _navCtx = ctx;
-            _ruleName = ctx.DetailItemName;
-            TitleText.Text = ctx.DetailItemName;
-
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-
-            RenderForm();
-        }
     }
 
     private void RenderForm()
@@ -1057,14 +1054,5 @@ public sealed partial class AppGwRoutingRuleDetailPage : Page
             Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
             Margin = new Thickness(0, 4, 0, 0),
         });
-    }
-
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

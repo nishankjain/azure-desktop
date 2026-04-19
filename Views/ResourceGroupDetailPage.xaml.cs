@@ -1,12 +1,16 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class ResourceGroupDetailPage : Page
+public sealed partial class ResourceGroupDetailPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Resource Group";
+    public override string? ActiveNavTag => "RGDetail";
+    protected override bool IsOverviewPage => true;
+    public override NavItemDefinition[] GetNavItems() => ResourceGroupNavItems.Get();
+
     public ResourceGroupDetailViewModel ViewModel { get; }
 
     public ResourceGroupDetailPage()
@@ -15,22 +19,12 @@ public sealed partial class ResourceGroupDetailPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        if (e.Parameter is NavigationContext ctx && ctx.ResourceGroupName is not null)
+        if (ctx?.ResourceGroupName is not null)
         {
             var rgItem = new ResourceGroupItem(ctx.ResourceGroupName, ctx.ResourceGroupLocation ?? "");
             ViewModel.Load(ctx.SubscriptionId, rgItem);
         }
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

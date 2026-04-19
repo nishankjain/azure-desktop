@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<Page
+<views:AppGwPageBase
     x:Class="AzureDesktop.Views.AppGwBackendPoolDetailPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -168,4 +168,4 @@
             </Grid>
         </Grid>
     </Grid>
-</Page>
+</views:AppGwPageBase>

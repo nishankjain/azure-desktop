@@ -1,48 +1,26 @@
 using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class AppGwPrivateLinkPage : Page
+public sealed partial class AppGwPrivateLinkPage : AppGwPageBase
 {
-    private const AppGwSection Section = AppGwSection.PrivateLink;
-    private CancellationTokenSource? _cts;
-    private NavigationContext? _navCtx;
-    public AppGwViewModel ViewModel { get; }
+    public override string PageLabel => "Private Link";
+    public override string? ActiveNavTag => "AppGwPrivateLink";
 
     public AppGwPrivateLinkPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
-        {
-            _navCtx = ctx;
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-            Render();
-        }
-    }
-
-    private void Render()
+    protected override void OnDataLoaded()
     {
         SectionTable.ItemsSource = ViewModel.PrivateLinks;
         SectionTable.Columns = "Name, IP Configurations";
         SectionTable.ShowCheckboxes = true;
         SectionTable.IsNavigable = false;
         SectionTable.EmptyMessage = "No private link configurations.";
-        SectionTable.ShowAddButton = AppGwViewModel.GetEditableFields(Section).Count > 0;
+        SectionTable.ShowAddButton = false;
 
         SectionTable.ItemClick -= OnItemClick;
         SectionTable.DeleteClick -= OnDeleteClick;
@@ -61,26 +39,18 @@ public sealed partial class AppGwPrivateLinkPage : Page
         var deleted = false;
         foreach (var name in names)
         {
-            if (ViewModel.DeleteItem(Section, name)) deleted = true;
+            if (ViewModel.DeletePrivateLink(name)) deleted = true;
         }
         if (deleted)
         {
             var desc = names.Count == 1 ? $"Deleted '{names[0]}'." : $"Deleted {names.Count} items.";
             try { await ViewModel.SaveChangesAsync(desc); } catch { }
-            Render();
+            OnDataLoaded();
         }
     }
 
     private async void OnAddClick(object? sender, EventArgs e)
     {
-        await AppGwDialogHelper.ShowAddDialogAsync(XamlRoot, ViewModel, Section, Render);
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
+        // No add support for private links
     }
 }

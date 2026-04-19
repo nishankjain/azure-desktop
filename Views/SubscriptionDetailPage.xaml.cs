@@ -1,14 +1,18 @@
 using System.Collections.ObjectModel;
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class SubscriptionDetailPage : Page
+public sealed partial class SubscriptionDetailPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Subscription";
+    public override string? ActiveNavTag => "SubscriptionDetail";
+    protected override bool IsOverviewPage => true;
+    public override NavItemDefinition[] GetNavItems() => SubscriptionNavItems.Get();
+
     public SubscriptionDetailViewModel ViewModel { get; }
 
     public SubscriptionDetailPage()
@@ -17,21 +21,9 @@ public sealed partial class SubscriptionDetailPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        if (e.Parameter is NavigationContext ctx)
-        {
+        if (ctx is not null)
             ViewModel.Subscription = ctx.Subscription;
-        }
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

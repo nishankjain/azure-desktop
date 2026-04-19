@@ -47,7 +47,39 @@ public sealed partial class BreadcrumbControl : UserControl
     }
 
     /// <summary>
-    /// Manual setup: clear, add items, apply. For pages that need custom chains.
+    /// Builds the breadcrumb chain from INavigablePage.GetBreadcrumbs().
+    /// </summary>
+    public void BuildFromPage(INavigablePage? page, Frame frame)
+    {
+        _fullChain.Clear();
+        _visibleItems.Clear();
+        EllipsisButton.Visibility = Visibility.Collapsed;
+
+        if (page is null)
+        {
+            Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        Visibility = Visibility.Visible;
+
+        foreach (var entry in page.GetBreadcrumbs())
+        {
+            if (entry.PageType is not null && entry.Context is not null)
+            {
+                var capturedType = entry.PageType;
+                var capturedCtx = entry.Context;
+                _fullChain.Add((entry.Label, () => frame.Navigate(capturedType, capturedCtx)));
+            }
+            else
+            {
+                // Current page — no navigation action
+                _fullChain.Add((entry.Label, () => { }));
+            }
+        }
+
+        Apply();
+    }
     /// </summary>
     public void Clear()
     {

@@ -1,4 +1,5 @@
 using Azure.ResourceManager.Network.Models;
+using AzureDesktop.Helpers;
 using AzureDesktop.Services;
 using AzureDesktop.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -77,13 +78,13 @@ public partial class BackendTargetRow : ObservableObject
     public ApplicationGatewayBackendAddress Address => _address;
 }
 
-public sealed partial class AppGwBackendPoolDetailPage : Page
+public sealed partial class AppGwBackendPoolDetailPage : AppGwPageBase
 {
+    public override string PageLabel => "Backend Pool";
+    public override string? ActiveNavTag => "AppGwBackendPools";
+
     private const int MaxTargets = 1200;
-    private CancellationTokenSource? _cts;
-    public AppGwViewModel ViewModel { get; }
     private readonly BackendTargetResourceService _resourceService;
-    private NavigationContext? _navCtx;
     private string _poolName = "";
     private List<BackendTargetRow> _allTargets = [];
     public ObservableCollection<BackendTargetRow> FilteredTargets { get; } = [];
@@ -92,33 +93,33 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
 
     public AppGwBackendPoolDetailPage()
     {
-        ViewModel = App.GetService<AppGwViewModel>();
         _resourceService = App.GetService<BackendTargetResourceService>();
         InitializeComponent();
         TargetsList.ItemsSource = FilteredTargets;
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx && ctx.DetailItemName is not null)
+        if (ctx?.DetailItemName is not null)
         {
-            _navCtx = ctx;
             _poolName = ctx.DetailItemName;
             TitleText.Text = ctx.DetailItemName;
-
-            if (ctx.Resource is not null)
-            {
-                await ViewModel.LoadAsync(ctx.Resource.ResourceId, _cts.Token);
-            }
-
-            LoadTargets();
-            RenderRules();
         }
+        base.OnContextReady(ctx);
+    }
+
+    protected override void OnDataLoaded()
+    {
+        LoadTargets();
+        RenderRules();
+    }
+
+    public override BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var baseCrumbs = base.GetBreadcrumbs();
+        var list = baseCrumbs.ToList();
+        list.Insert(list.Count - 1, new("Backend Pools", typeof(AppGwBackendPoolsPage), NavCtx with { DetailItemName = null }));
+        return list.ToArray();
     }
 
     private void LoadTargets()
@@ -193,7 +194,7 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
             try
             {
                 var resources = await _resourceService.GetResourcesAsync(
-                    newType, ViewModel.ResourceId, _cts?.Token ?? default);
+                    newType, ViewModel.ResourceId, Cts?.Token ?? default);
                 row.AvailableResources = new ObservableCollection<BackendTargetResource>(resources);
             }
             finally
@@ -304,10 +305,10 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
 
     private void RuleItem_Click(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is string ruleName && _navCtx is not null)
+        if (e.ClickedItem is string ruleName && NavCtx is not null)
         {
             Frame.Navigate(typeof(AppGwRoutingRuleDetailPage),
-                _navCtx with { Section = AppGwSection.RoutingRules, DetailItemName = ruleName });
+                NavCtx with { Section = AppGwSection.RoutingRules, DetailItemName = ruleName });
         }
     }
 
@@ -333,13 +334,5 @@ public sealed partial class AppGwBackendPoolDetailPage : Page
         await ViewModel.SaveChangesAsync($"Updated pool '{_poolName}'.");
         LoadTargets();
         RenderRules();
-    }
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

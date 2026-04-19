@@ -166,54 +166,36 @@ public sealed partial class MainWindow : Window
             ? Visibility.Visible
             : Visibility.Collapsed;
 
-        // Hide home button when already on home page
         HomeButton.Visibility = e.SourcePageType == typeof(HomePage)
             ? Visibility.Collapsed
             : Visibility.Visible;
 
-        // Trim back stack to prevent unbounded memory growth
         while (ContentFrame.BackStack.Count > 5)
         {
             ContentFrame.BackStack.RemoveAt(0);
         }
 
-        _lastAppGwNavTag = null;
-
         if (e.Parameter is NavigationContext ctx)
         {
             _activeSubscription = ctx.Subscription;
             _activeNavContext = ctx;
-
-            if (ctx.Section is not null)
-            {
-                _lastAppGwNavTag = ctx.Section switch
-                {
-                    AppGwSection.BackendPools => "AppGwBackendPools",
-                    AppGwSection.BackendSettings => "AppGwBackendSettings",
-                    AppGwSection.FrontendIP => "AppGwFrontendIP",
-                    AppGwSection.PrivateLink => "AppGwPrivateLink",
-                    AppGwSection.SslSettings => "AppGwSsl",
-                    AppGwSection.Listeners => "AppGwListeners",
-                    AppGwSection.RoutingRules => "AppGwRoutingRules",
-                    AppGwSection.RewriteSets => "AppGwRewriteSets",
-                    AppGwSection.HealthProbes => "AppGwHealthProbes",
-                    AppGwSection.Configuration => "AppGwConfig",
-                    AppGwSection.Waf => "AppGwWaf",
-                    AppGwSection.JwtValidation => "AppGwJwt",
-                    _ => "AppGwOverview",
-                };
-            }
-
-            BreadcrumbNav.Build(ctx, ContentFrame);
         }
         else if (e.SourcePageType == typeof(HomePage) || e.SourcePageType == typeof(SubscriptionsPage))
         {
             _activeSubscription = null;
             _activeNavContext = null;
-            BreadcrumbNav.Build(null, ContentFrame);
         }
 
-        UpdateContextNav(e.SourcePageType);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            // Build breadcrumbs and nav items after page's OnNavigatedTo has run
+            if (ContentFrame.Content is INavigablePage navigable)
+                BreadcrumbNav.BuildFromPage(navigable, ContentFrame);
+            else
+                BreadcrumbNav.Build(null, ContentFrame);
+
+            UpdateContextNav(e.SourcePageType);
+        });
         BindPageLoader(ContentFrame.Content);
     }
 
@@ -263,116 +245,24 @@ public sealed partial class MainWindow : Window
         {
             NavView.MenuItems.Remove(item);
         }
-
         _contextNavItems.Clear();
 
-        if (_activeSubscription is null)
+        if (ContentFrame.Content is INavigablePage navigable)
         {
-            NavView.SelectedItem = null;
-            return;
-        }
+            foreach (var def in navigable.GetNavItems())
+            {
+                AddNavItems(CreateSvgNavItem(def.Label, def.Tag, def.IconFile));
+            }
 
-        // Show only actions for the current scope
-        // Tags/Locks pages inherit their parent's scope
-        var isTagsOrLocks = pageType == typeof(TagsPage) || pageType == typeof(LocksPage);
-        var isAppGwSection = pageType == typeof(AppGwSectionPage)
-            || pageType == typeof(AppGwOverviewPage)
-            || pageType == typeof(AppGwBackendPoolsPage)
-            || pageType == typeof(AppGwBackendSettingsPage)
-            || pageType == typeof(AppGwFrontendIPPage)
-            || pageType == typeof(AppGwPrivateLinkPage)
-            || pageType == typeof(AppGwSslSettingsPage)
-            || pageType == typeof(AppGwListenersPage)
-            || pageType == typeof(AppGwRoutingRulesPage)
-            || pageType == typeof(AppGwRewriteSetsPage)
-            || pageType == typeof(AppGwHealthProbesPage)
-            || pageType == typeof(AppGwConfigurationPage)
-            || pageType == typeof(AppGwWafPage)
-            || pageType == typeof(AppGwJwtValidationPage);
-        var isAppGwSubDetail = pageType == typeof(AppGwBackendPoolDetailPage) || pageType == typeof(AppGwRoutingRuleDetailPage);
-        var isAppGw = _activeNavContext?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true;
-
-        if (_activeNavContext?.Resource is not null && isAppGw && (pageType == typeof(ResourceDetailPage) || isAppGwSection || isAppGwSubDetail || isTagsOrLocks))
-        {
-            // AppGW-specific nav
-            AddNavItems(
-                CreateSvgNavItem("Overview", "AppGwOverview", "applicationGateways.svg"),
-                CreateSvgNavItem("Backend Pools", "AppGwBackendPools", "backendPools.svg"),
-                CreateSvgNavItem("Backend Settings", "AppGwBackendSettings", "backendSettings.svg"),
-                CreateSvgNavItem("Frontend IP", "AppGwFrontendIP", "frontendIP.svg"),
-                CreateSvgNavItem("Private Link", "AppGwPrivateLink", "privateLink.svg"),
-                CreateSvgNavItem("SSL Settings", "AppGwSsl", "sslSettings.svg"),
-                CreateSvgNavItem("Listeners", "AppGwListeners", "listeners.svg"),
-                CreateSvgNavItem("Routing Rules", "AppGwRoutingRules", "routingRules.svg"),
-                CreateSvgNavItem("Rewrite Sets", "AppGwRewriteSets", "rewriteSets.svg"),
-                CreateSvgNavItem("Health Probes", "AppGwHealthProbes", "healthProbes.svg"),
-                CreateSvgNavItem("Configuration", "AppGwConfig", "configuration.svg"),
-                CreateSvgNavItem("WAF", "AppGwWaf", "waf.svg"),
-                CreateSvgNavItem("JWT Validation", "AppGwJwt", "jwtValidation.svg"),
-                CreateSvgNavItem("Manage Tags", "ResourceTags", "tags.svg"),
-                CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
-        }
-        else if (_activeNavContext?.Resource is not null && (pageType == typeof(ResourceDetailPage) || isTagsOrLocks))
-        {
-            var iconFile = Helpers.ResourceIconResolver.GetIconFileName(_activeNavContext.Resource.Type);
-            AddNavItems(
-                CreateSvgNavItem("Overview", "ResourceDetail", iconFile),
-                CreateSvgNavItem("Manage Tags", "ResourceTags", "tags.svg"),
-                CreateSvgNavItem("Manage Locks", "ResourceLocks", "locks.svg"));
-        }
-        else if (_activeNavContext?.ResourceGroupName is not null &&
-                 (pageType == typeof(ResourceGroupDetailPage) || pageType == typeof(ResourcesPage) || pageType == typeof(ResourceDetailPage) || isAppGwSection || isTagsOrLocks))
-        {
-            AddNavItems(
-                CreateSvgNavItem("Overview", "RGDetail", "resourceGroups.svg"),
-                CreateSvgNavItem("Resources", "Resources", "default.svg"),
-                CreateSvgNavItem("Manage Tags", "RGTags", "tags.svg"),
-                CreateSvgNavItem("Manage Locks", "RGLocks", "locks.svg"));
+            var activeTag = navigable.ActiveNavTag;
+            NavView.SelectedItem = activeTag is not null
+                ? _contextNavItems.FirstOrDefault(i => i.Tag?.ToString() == activeTag)
+                : null;
         }
         else
         {
-            AddNavItems(
-                CreateSvgNavItem("Overview", "SubscriptionDetail", "subscriptions.svg"),
-                CreateSvgNavItem("Resource Groups", "ResourceGroups", "resourceGroups.svg"),
-                CreateSvgNavItem("Manage Tags", "ManageTags", "tags.svg"),
-                CreateSvgNavItem("Manage Locks", "ManageLocks", "locks.svg"),
-                CreateSvgNavItem("Preview Features", "PreviewFeatures", "previewFeatures.svg"));
+            NavView.SelectedItem = null;
         }
-
-        var activeTag = pageType switch
-        {
-            var t when t == typeof(SubscriptionDetailPage) => "SubscriptionDetail",
-            var t when t == typeof(FeaturesPage) || t == typeof(FeatureDetailPage) => "PreviewFeatures",
-            var t when t == typeof(ResourceGroupsPage) => "ResourceGroups",
-            var t when t == typeof(ResourceGroupDetailPage) => "RGDetail",
-            var t when t == typeof(ResourcesPage) => "Resources",
-            var t when t == typeof(ResourceDetailPage) => isAppGw ? "AppGwOverview" : "ResourceDetail",
-            var t when t == typeof(TagsPage) => "ManageTags",
-            var t when t == typeof(LocksPage) => "ManageLocks",
-            var t when t == typeof(AppGwSectionPage) => _lastAppGwNavTag,
-            var t when t == typeof(AppGwOverviewPage) => "AppGwOverview",
-            var t when t == typeof(AppGwBackendPoolsPage) => "AppGwBackendPools",
-            var t when t == typeof(AppGwBackendSettingsPage) => "AppGwBackendSettings",
-            var t when t == typeof(AppGwFrontendIPPage) => "AppGwFrontendIP",
-            var t when t == typeof(AppGwPrivateLinkPage) => "AppGwPrivateLink",
-            var t when t == typeof(AppGwSslSettingsPage) => "AppGwSsl",
-            var t when t == typeof(AppGwListenersPage) => "AppGwListeners",
-            var t when t == typeof(AppGwRoutingRulesPage) => "AppGwRoutingRules",
-            var t when t == typeof(AppGwRewriteSetsPage) => "AppGwRewriteSets",
-            var t when t == typeof(AppGwHealthProbesPage) => "AppGwHealthProbes",
-            var t when t == typeof(AppGwConfigurationPage) => "AppGwConfig",
-            var t when t == typeof(AppGwWafPage) => "AppGwWaf",
-            var t when t == typeof(AppGwJwtValidationPage) => "AppGwJwt",
-            var t when t == typeof(AppGwBackendPoolDetailPage) => "AppGwBackendPools",
-            var t when t == typeof(AppGwRoutingRuleDetailPage) => "AppGwRoutingRules",
-            _ => null,
-        };
-
-        NavView.SelectedItem = activeTag is not null
-            ? _contextNavItems.FirstOrDefault(i => i.Tag?.ToString() == activeTag
-                || (activeTag == "ManageTags" && (i.Tag?.ToString() == "RGTags" || i.Tag?.ToString() == "ResourceTags"))
-                || (activeTag == "ManageLocks" && (i.Tag?.ToString() == "RGLocks" || i.Tag?.ToString() == "ResourceLocks")))
-            : null;
     }
 
     private void AddNavItems(params NavigationViewItem[] items)
@@ -422,9 +312,7 @@ public sealed partial class MainWindow : Window
     private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
         if (args.InvokedItemContainer is not NavigationViewItem item)
-        {
             return;
-        }
 
         var tag = item.Tag?.ToString();
 
@@ -435,90 +323,14 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // Resource-level nav
-        if (_activeNavContext?.Resource is not null)
+        // Find the matching NavItemDefinition from the current page
+        if (ContentFrame.Content is INavigablePage navigable)
         {
-            switch (tag)
+            var def = navigable.GetNavItems().FirstOrDefault(d => d.Tag == tag);
+            if (def is not null)
             {
-                case "ResourceDetail":
-                case "AppGwOverview":
-                    ContentFrame.Navigate(typeof(ResourceDetailPage), _activeNavContext with { Section = null, DetailItemName = null, PageLabel = null });
-                    return;
-                case "ResourceTags":
-                    ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { PageLabel = "Tags" });
-                    return;
-                case "ResourceLocks":
-                    ContentFrame.Navigate(typeof(LocksPage), _activeNavContext with { PageLabel = "Locks" });
-                    return;
-            }
-
-            // AppGW section nav
-            if (tag?.StartsWith("AppGw") == true)
-            {
-                var pageType = tag switch
-                {
-                    "AppGwOverview" => typeof(AppGwOverviewPage),
-                    "AppGwBackendPools" => typeof(AppGwBackendPoolsPage),
-                    "AppGwBackendSettings" => typeof(AppGwBackendSettingsPage),
-                    "AppGwFrontendIP" => typeof(AppGwFrontendIPPage),
-                    "AppGwPrivateLink" => typeof(AppGwPrivateLinkPage),
-                    "AppGwSsl" => typeof(AppGwSslSettingsPage),
-                    "AppGwListeners" => typeof(AppGwListenersPage),
-                    "AppGwRoutingRules" => typeof(AppGwRoutingRulesPage),
-                    "AppGwRewriteSets" => typeof(AppGwRewriteSetsPage),
-                    "AppGwHealthProbes" => typeof(AppGwHealthProbesPage),
-                    "AppGwConfig" => typeof(AppGwConfigurationPage),
-                    "AppGwWaf" => typeof(AppGwWafPage),
-                    "AppGwJwt" => typeof(AppGwJwtValidationPage),
-                    _ => typeof(AppGwOverviewPage),
-                };
-                ContentFrame.Navigate(pageType, _activeNavContext with { DetailItemName = null, PageLabel = null });
+                ContentFrame.Navigate(def.PageType, _activeNavContext);
                 return;
-            }
-        }
-
-        // RG-level nav
-        if (_activeNavContext?.ResourceGroupName is not null)
-        {
-            var rgId = $"/subscriptions/{_activeNavContext.SubscriptionId}/resourceGroups/{_activeNavContext.ResourceGroupName}";
-            switch (tag)
-            {
-                case "RGDetail":
-                    ContentFrame.Navigate(typeof(ResourceGroupDetailPage), _activeNavContext with { Resource = null, Section = null, DetailItemName = null, PageLabel = null });
-                    return;
-                case "Resources":
-                    ContentFrame.Navigate(typeof(ResourcesPage), _activeNavContext with { Resource = null, PageLabel = "Resources" });
-                    return;
-                case "RGTags":
-                    ContentFrame.Navigate(typeof(TagsPage), _activeNavContext with { Resource = null, PageLabel = "Tags" });
-                    return;
-                case "RGLocks":
-                    ContentFrame.Navigate(typeof(LocksPage), _activeNavContext with { Resource = null, PageLabel = "Locks" });
-                    return;
-            }
-        }
-
-        // Subscription-level nav
-        if (_activeSubscription is not null)
-        {
-            var subCtx = _activeNavContext ?? new NavigationContext(_activeSubscription);
-            switch (tag)
-            {
-                case "SubscriptionDetail":
-                    ContentFrame.Navigate(typeof(SubscriptionDetailPage), new NavigationContext(_activeSubscription));
-                    return;
-                case "ManageTags":
-                    ContentFrame.Navigate(typeof(TagsPage), new NavigationContext(_activeSubscription, PageLabel: "Tags"));
-                    return;
-                case "ManageLocks":
-                    ContentFrame.Navigate(typeof(LocksPage), new NavigationContext(_activeSubscription, PageLabel: "Locks"));
-                    return;
-                case "PreviewFeatures":
-                    ContentFrame.Navigate(typeof(FeaturesPage), new NavigationContext(_activeSubscription, PageLabel: "Preview Features"));
-                    return;
-                case "ResourceGroups":
-                    ContentFrame.Navigate(typeof(ResourceGroupsPage), new NavigationContext(_activeSubscription, PageLabel: "Resource Groups"));
-                    return;
             }
         }
     }

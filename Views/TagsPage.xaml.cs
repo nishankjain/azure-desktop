@@ -1,13 +1,25 @@
+using AzureDesktop.Helpers;
 using AzureDesktop.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 
 namespace AzureDesktop.Views;
 
-public sealed partial class TagsPage : Page
+public sealed partial class TagsPage : NavigablePage
 {
-    private CancellationTokenSource? _cts;
+    public override string PageLabel => "Tags";
+    public override string? ActiveNavTag => "Tags";
+    public override NavItemDefinition[] GetNavItems()
+    {
+        if (NavCtx?.Resource?.Type.Equals("Microsoft.Network/applicationGateways", StringComparison.OrdinalIgnoreCase) == true)
+            return AppGwNavItems.Get();
+        if (NavCtx?.Resource is not null)
+            return ResourceNavItems.Get(NavCtx.Resource.Type);
+        if (NavCtx?.ResourceGroupName is not null)
+            return ResourceGroupNavItems.Get();
+        return SubscriptionNavItems.Get();
+    }
+
     public TagManagerViewModel ViewModel { get; }
 
     public TagsPage()
@@ -16,17 +28,12 @@ public sealed partial class TagsPage : Page
         InitializeComponent();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override async void OnContextReady(NavigationContext? ctx)
     {
-        base.OnNavigatedTo(e);
-
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
-
-        if (e.Parameter is NavigationContext ctx)
+        if (ctx is not null)
         {
             var resourceId = GetResourceId(ctx);
-            await ViewModel.LoadTagsAsync(resourceId, _cts.Token);
+            await ViewModel.LoadTagsAsync(resourceId, Cts!.Token);
         }
     }
 
@@ -37,6 +44,17 @@ public sealed partial class TagsPage : Page
         if (ctx.ResourceGroupName is not null)
             return $"/subscriptions/{ctx.SubscriptionId}/resourceGroups/{ctx.ResourceGroupName}";
         return $"/subscriptions/{ctx.SubscriptionId}";
+    }
+
+    public override BreadcrumbEntry[] GetBreadcrumbs()
+    {
+        var ctx = NavCtx!;
+        var chain = ctx.BuildBreadcrumbChain();
+        var result = new List<BreadcrumbEntry>();
+        foreach (var (label, pageType, navCtx) in chain)
+            result.Add(new BreadcrumbEntry(label, pageType, navCtx));
+        result.Add(new BreadcrumbEntry("Tags", null, null));
+        return result.ToArray();
     }
 
     private void EditTag_Click(object sender, RoutedEventArgs e)
@@ -69,13 +87,5 @@ public sealed partial class TagsPage : Page
     {
         if (sender is Button { Tag: TagEntry tag })
             await ViewModel.ConfirmDeleteCommand.ExecuteAsync(tag);
-    }
-
-    protected override void OnNavigatedFrom(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
-    {
-        _cts?.Cancel();
-        _cts?.Dispose();
-        _cts = null;
-        base.OnNavigatedFrom(e);
     }
 }

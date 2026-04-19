@@ -3,6 +3,23 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace AzureDesktop.ViewModels;
 
+public enum AppGwSection
+{
+    Overview,
+    BackendPools,
+    BackendSettings,
+    FrontendIP,
+    PrivateLink,
+    SslSettings,
+    Listeners,
+    RoutingRules,
+    RewriteSets,
+    HealthProbes,
+    Configuration,
+    Waf,
+    JwtValidation,
+}
+
 /// <summary>
 /// Unified navigation context that describes the full drill-down hierarchy.
 /// The breadcrumb chain is derived from which fields are populated.
